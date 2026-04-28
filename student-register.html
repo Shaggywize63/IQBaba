@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Start Your Journey | IQ Baba</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        body {
+            background: #f8fafc;
+            color: var(--text-dark);
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        .register-wrapper-v2 {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 4rem 1.5rem;
+        }
+
+        .register-card-v2 {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 40px;
+            padding: 4rem;
+            width: 100%;
+            max-width: 900px;
+            z-index: 10;
+            box-shadow: 0 50px 120px rgba(0,0,0,0.06);
+            animation: slideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .register-header-v2 {
+            text-align: center;
+            margin-bottom: 3.5rem;
+        }
+
+        .register-header-v2 h1 {
+            font-size: 3rem;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .register-header-v2 p {
+            color: var(--text-grey);
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .form-section-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--primary-color);
+        }
+
+        .form-section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #e2e8f0;
+        }
+
+        .form-control-v2 {
+            background: #fff;
+            border: 2px solid #e2e8f0;
+            color: var(--text-dark);
+            padding: 1rem 1.25rem;
+            border-radius: 16px;
+            width: 100%;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-control-v2:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(59, 113, 159, 0.1);
+        }
+
+        .subject-tag-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 1rem;
+        }
+
+        .subject-tag {
+            background: white;
+            border: 2px solid #e2e8f0;
+            padding: 1rem;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 600;
+        }
+
+        .subject-tag:hover {
+            border-color: var(--primary-color);
+            background: rgba(59, 113, 159, 0.02);
+        }
+
+        .subject-tag.selected {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .subject-tag input {
+            display: none;
+        }
+
+        .btn-register {
+            background: linear-gradient(90deg, var(--primary-color), #2E5A80);
+            color: white;
+            padding: 1.25rem 3rem;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            box-shadow: 0 10px 25px rgba(59, 113, 159, 0.2);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-register:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(59, 113, 159, 0.3);
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 640px) {
+            .register-card-v2 {
+                padding: 2.5rem 1.5rem;
+            }
+            .register-header-v2 h1 {
+                font-size: 2.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="register-wrapper-v2">
+        <div class="register-card-v2">
+            <div class="register-header-v2">
+                <img src="media/logo.png" alt="IQ BABA Logo" style="height: 100px; margin-bottom: 1rem;">
+                <p id="pageSubtitle">Start your journey to academic excellence</p>
+            </div>
+            
+            <form id="registerForm">
+                <div class="form-section-title">
+                    <span>Personal Details</span>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-6 mb-12">
+                    <div class="form-group">
+                        <label class="form-label" for="fullName">Full Name</label>
+                        <input type="text" id="fullName" name="fullName" class="form-control-v2" placeholder="e.g. John Doe" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="studentClass">Class Level</label>
+                        <select id="studentClass" name="studentClass" class="form-control-v2" required>
+                            <option value="">Select your class</option>
+                            <option value="6">Class 6</option>
+                            <option value="7">Class 7</option>
+                            <option value="8">Class 8</option>
+                            <option value="9">Class 9</option>
+                            <option value="10">Class 10</option>
+                            <option value="11">Class 11</option>
+                            <option value="12">Class 12</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="schoolName">Affiliated School</label>
+                        <select id="schoolName" name="schoolName" class="form-control-v2" required>
+                            <option value="">Select your school</option>
+                            <!-- Populated via JS -->
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="board">Education Board</label>
+                        <select id="board" name="board" class="form-control-v2" required>
+                            <option value="">Select your board</option>
+                            <option value="CBSE">CBSE</option>
+                            <option value="ICSE">ICSE</option>
+                            <option value="State Board">State Board</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="email">Email Address</label>
+                        <input type="email" id="email" name="email" class="form-control-v2" placeholder="name@email.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="phone">Phone Number</label>
+                        <input type="tel" id="phone" name="phone" class="form-control-v2" placeholder="+91 XXXX XXX XXX">
+                    </div>
+                </div>
+
+                <div class="form-section-title">
+                    <span>Olympiad Selections</span>
+                </div>
+
+                <div class="form-group mb-12">
+                    <p class="text-sm text-grey mb-4">Choose up to 8 subjects you wish to compete in.</p>
+                    <div class="subject-tag-grid" id="subjectContainer">
+                        <!-- Populated via JS -->
+                    </div>
+                    <small id="subjectError" class="text-danger mt-4 block" style="display:none; font-weight: 600;">⚠️ Maximum 8 subjects allowed.</small>
+                </div>
+
+                <div class="flex justify-between items-center mt-12 flex-wrap gap-6">
+                    <a href="student-login.html" class="text-dark font-bold hover:text-primary transition-all">&larr; Back to Login</a>
+                    <button type="submit" class="btn-register btn-glow">Complete Registration</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Populate Schools
+            const schoolSelect = document.getElementById('schoolName');
+            if (window.mockData && window.mockData.schools) {
+                window.mockData.schools.forEach((school, index) => {
+                    const option = document.createElement('option');
+                    option.value = index + 1;
+                    option.textContent = school;
+                    schoolSelect.appendChild(option);
+                });
+            }
+
+            // Populate Subjects
+            const subjectContainer = document.getElementById('subjectContainer');
+            if (window.mockData && window.mockData.subjects) {
+                window.mockData.subjects.forEach((subject, index) => {
+                    const label = document.createElement('label');
+                    label.className = 'subject-tag';
+                    label.innerHTML = `
+                        <input type="checkbox" name="subjects" value="${index + 1}" onchange="handleSubjectChange(this)">
+                        <span>${subject.name}</span>
+                    `;
+                    subjectContainer.appendChild(label);
+                });
+            }
+
+            // Check if Editing
+            if (window.api && window.api.getToken() && window.api.getRole() === 'student') {
+                document.querySelector('.register-header-v2 h1').textContent = 'Update Profile';
+                document.getElementById('pageSubtitle').textContent = 'Keep your academic record up to date.';
+                loadProfile();
+            }
+        });
+
+        async function loadProfile() {
+            try {
+                const profile = await window.api.getStudentProfile();
+                document.getElementById('fullName').value = profile.full_name;
+                document.getElementById('studentClass').value = profile.class_level;
+                document.getElementById('schoolName').value = profile.school_id;
+                document.getElementById('board').value = profile.board;
+                document.getElementById('email').value = profile.email || '';
+                document.getElementById('phone').value = profile.phone || '';
+                
+                if (profile.subjects) {
+                    profile.subjects.forEach(id => {
+                        const cb = document.querySelector(`input[name="subjects"][value="${id}"]`);
+                        if (cb) {
+                            cb.checked = true;
+                            cb.parentElement.classList.add('selected');
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        function handleSubjectChange(checkbox) {
+            const checkedCount = document.querySelectorAll('input[name="subjects"]:checked').length;
+            const errorMsg = document.getElementById('subjectError');
+            
+            if (checkedCount > 8) {
+                checkbox.checked = false;
+                errorMsg.style.display = 'block';
+            } else {
+                errorMsg.style.display = 'none';
+            }
+            
+            if(checkbox.checked) {
+                checkbox.parentElement.classList.add('selected');
+            } else {
+                checkbox.parentElement.classList.remove('selected');
+            }
+        }
+
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const checkedCount = document.querySelectorAll('input[name="subjects"]:checked').length;
+            
+            if (checkedCount === 0) {
+                window.showNotification('Please select at least one subject.', 'danger');
+                return;
+            }
+
+            const formData = window.serializeForm(this);
+            const submitBtn = this.querySelector('button[type="submit"]');
+            
+            try {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Processing...';
+                
+                const payload = {
+                    fullName: formData.fullName,
+                    studentClass: formData.studentClass,
+                    schoolId: parseInt(formData.schoolName),
+                    board: formData.board,
+                    email: formData.email,
+                    phone: formData.phone,
+                    subjects: Array.isArray(formData.subjects) ? formData.subjects.map(id => parseInt(id)) : [parseInt(formData.subjects)]
+                };
+
+                if (window.api.getToken() && window.api.getRole() === 'student') {
+                    await window.api.updateStudentProfile(payload);
+                    window.showNotification('Profile updated!', 'success');
+                } else {
+                    payload.password = 'password123'; 
+                    await window.api.registerStudent(payload);
+                    window.showNotification('Welcome aboard! Registration complete.', 'success');
+                }
+                
+                setTimeout(() => {
+                    window.location.href = 'student-dashboard.html';
+                }, 1200);
+            } catch (error) {
+                window.showNotification(error.message || 'Error occurred.', 'danger');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Complete Registration';
+            }
+        });
+    </script>
+</body>
+</html>

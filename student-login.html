@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Login | IQ Baba</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        body {
+            background: #f8fafc;
+            color: var(--text-dark);
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .student-login-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            position: relative;
+        }
+
+        .student-login-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 40px;
+            padding: 4rem;
+            width: 100%;
+            max-width: 500px;
+            z-index: 10;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.05);
+            animation: slideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .student-login-header {
+            text-align: center;
+            margin-bottom: 3.5rem;
+        }
+
+        .student-login-header h1 {
+            font-size: 3rem;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .student-login-header p {
+            color: var(--text-grey);
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .form-control-student {
+            background: #fff;
+            border: 2px solid #e2e8f0;
+            color: var(--text-dark);
+            padding: 1.25rem 1.5rem;
+            border-radius: 20px;
+            width: 100%;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-control-student:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(59, 113, 159, 0.1);
+        }
+
+        .btn-student {
+            background: linear-gradient(90deg, var(--primary-color), #2E5A80);
+            color: white;
+            padding: 1.25rem;
+            border-radius: 20px;
+            font-weight: 700;
+            width: 100%;
+            font-size: 1.1rem;
+            margin-top: 1.5rem;
+            box-shadow: 0 10px 25px rgba(59, 113, 159, 0.2);
+        }
+
+        .btn-student:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(59, 113, 159, 0.3);
+        }
+
+        .register-footer {
+            text-align: center;
+            margin-top: 2.5rem;
+            font-size: 1rem;
+            color: var(--text-grey);
+        }
+
+        .register-footer a {
+            color: var(--primary-color);
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .back-to-home {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-grey);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .back-to-home:hover {
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="student-login-wrapper">
+        <a href="index.html" class="back-to-home">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            Back to Home
+        </a>
+
+        <div class="student-login-card">
+            <div class="student-login-header">
+                <img src="media/logo.png" alt="IQ BABA Logo" style="height: 120px; margin-bottom: 1rem;">
+                <p>Ready to master the challenge?</p>
+            </div>
+            
+            <form id="loginForm">
+                <div id="error-msg" style="display: none; background: #fee2e2; color: #b91c1c; padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; font-size: 0.9rem; text-align: center;"></div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="username">Username</label>
+                    <input type="text" id="username" name="username" class="form-control-student" placeholder="Your username" required>
+                </div>
+                
+                <div class="form-group">
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="form-label mb-0" for="password">Password</label>
+                        <a href="#" class="text-sm" style="color: var(--primary-color);">Forgot?</a>
+                    </div>
+                    <input type="password" id="password" name="password" class="form-control-student" placeholder="Your password" required>
+                </div>
+                
+                <button type="submit" class="btn btn-student btn-glow">Login to Dashboard</button>
+            </form>
+            
+            <div class="register-footer">
+                New here? <a href="student-register.html">Create an Account</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = window.serializeForm(this);
+            const errorMsg = document.getElementById('error-msg');
+            const submitBtn = this.querySelector('button[type="submit"]');
+            
+            errorMsg.style.display = 'none';
+
+            try {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Launching...';
+                
+                await window.api.login(formData.username, formData.password, 'student');
+                
+                window.location.href = 'student-dashboard.html';
+            } catch (error) {
+                errorMsg.textContent = error.message || 'Incorrect username or password. Try again.';
+                errorMsg.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Login to Dashboard';
+            }
+        });
+    </script>
+</body>
+</html>

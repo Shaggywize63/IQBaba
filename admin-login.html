@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - IQ Baba</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .admin-login-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #111827; /* Dark background for admin */
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        /* Admin specific abstract background */
+        .admin-login-page::before {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, var(--primary-color) 0%, transparent 70%);
+            opacity: 0.1;
+            top: -200px;
+            right: -200px;
+            border-radius: 50%;
+        }
+        .admin-login-page::after {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, var(--secondary-color) 0%, transparent 70%);
+            opacity: 0.1;
+            bottom: -100px;
+            left: -100px;
+            border-radius: 50%;
+        }
+        .login-card {
+            background: rgba(31, 41, 55, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--border-radius-lg);
+            padding: 3rem 2.5rem;
+            width: 100%;
+            max-width: 420px;
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        .login-card h2 {
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+        .login-card p {
+            color: #9CA3AF;
+            margin-bottom: 2rem;
+        }
+        .form-label {
+            color: #D1D5DB;
+        }
+        .form-control {
+            background: rgba(17, 24, 39, 0.8);
+            border: 1px solid #374151;
+            color: white;
+        }
+        .form-control:focus {
+            background: #111827;
+            border-color: var(--primary-color);
+        }
+        .form-control::placeholder {
+            color: #6B7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-login-page">
+        <div class="login-card">
+            <div class="text-center">
+                <img src="media/logo-white.png" alt="IQ BABA Logo" style="height: 100px; margin-bottom: 1.5rem;">
+                <p>Secure login for administrators</p>
+            </div>
+            
+            <form id="adminLoginForm">
+                <div class="form-group">
+                    <label class="form-label" for="username">Admin Username</label>
+                    <input type="text" id="username" name="username" class="form-control" placeholder="Enter username" required>
+                </div>
+                
+                <div class="form-group mb-2">
+                    <label class="form-label" for="password">Secure Password</label>
+                    <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required>
+                </div>
+                
+                <div class="flex items-center gap-2 mb-4">
+                    <input type="checkbox" id="rememberMe" name="rememberMe" style="accent-color: var(--primary-color);">
+                    <label for="rememberMe" class="text-sm text-light">Remember me for 30 days</label>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-block">Authenticate</button>
+            </form>
+            
+            <div class="text-center mt-4">
+                <a href="student-login.html" class="text-sm text-light hover:text-white" style="color: #9CA3AF;">Return to Student Portal</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        document.getElementById('adminLoginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = window.serializeForm(this);
+            const submitBtn = this.querySelector('button[type="submit"]');
+            
+            try {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Authenticating...';
+                
+                await window.api.login(formData.username, formData.password, 'admin');
+                
+                window.showNotification('Authentication successful. Redirecting...', 'success');
+                
+                setTimeout(() => {
+                    window.location.href = 'admin-dashboard.html';
+                }, 1000);
+            } catch (error) {
+                window.showNotification(error.message || 'Invalid admin credentials. Access denied.', 'danger');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Authenticate';
+            }
+        });
+    </script>
+</body>
+</html>

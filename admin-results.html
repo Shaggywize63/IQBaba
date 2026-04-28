@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results & Performance - Admin Portal</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* Shared Admin Layout Styles */
+        .admin-layout { display: flex; min-height: 100vh; background-color: #F3F4F6; }
+        .sidebar { width: 260px; background-color: #1F2937; color: white; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid #374151; display: flex; align-items: center; gap: 0.75rem; }
+        .sidebar-header h2 { color: white; font-size: 1.25rem; margin: 0; }
+        .nav-menu { padding: 1rem 0; flex-grow: 1; }
+        .nav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.5rem; color: #D1D5DB; text-decoration: none; transition: all var(--transition-fast); }
+        .nav-item:hover { background-color: #374151; color: white; }
+        .nav-item.active { background-color: var(--primary-color); color: white; border-left: 4px solid #FFF; }
+        .nav-icon { width: 20px; height: 20px; }
+        .main-content { flex-grow: 1; display: flex; flex-direction: column; overflow-x: hidden; }
+        .top-header { background-color: white; height: 64px; padding: 0 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-sm); }
+        .content-area { padding: 2rem; overflow-y: auto; }
+        
+        .filter-panel { background: white; padding: 1.5rem; border-radius: var(--border-radius-md); box-shadow: var(--shadow-sm); margin-bottom: 1.5rem; }
+        .filter-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+    </style>
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div style="width: 32px; height: 32px; background: var(--primary-color); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                    <svg width="18" height="18" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                </div>
+                <h2>Admin Panel</h2>
+            </div>
+            <nav class="nav-menu">
+                <a href="admin-dashboard.html" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                    Dashboard Overview
+                </a>
+                <a href="admin-students.html" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    Student Management
+                </a>
+                <a href="admin-schools.html" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                    School Management
+                </a>
+                <a href="admin-results.html" class="nav-item active">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Results & Performance
+                </a>
+                <a href="admin-questions.html" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Exam & Questions
+                </a>
+
+                <div style="padding: 0.75rem 1.5rem; font-size: 0.75rem; text-transform: uppercase; color: #6B7280; font-weight: 700; letter-spacing: 0.05em;">Other Management</div>
+                <a href="admin-boards.html" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Board Management
+                </a>
+                <a href="admin-subjects.html" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                    Subject Management
+                </a>
+                <a href="admin-classes.html" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                    Class Management
+                </a>
+                <a href="admin-topics.html" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+                    Topic Management
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div><h3 style="margin: 0;">Results & Performance</h3></div>
+                <div class="flex items-center gap-4">
+                    <span class="text-sm font-bold">Admin User</span>
+                </div>
+            </header>
+
+            <div class="content-area">
+                
+                <!-- Filters -->
+                <div class="filter-panel">
+                    <h4 class="mb-3">Filter Results</h4>
+                    <div class="filter-grid">
+                        <div>
+                            <label class="form-label text-xs">School</label>
+                            <select class="form-control text-sm" id="schoolFilter">
+                                <option value="">All Schools</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label text-xs">Class</label>
+                            <select class="form-control text-sm">
+                                <option value="">All Classes</option>
+                                <option value="6">Class 6</option>
+                                <option value="10">Class 10</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label text-xs">Subject</label>
+                            <select class="form-control text-sm" id="subjectFilter">
+                                <option value="">All Subjects</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label text-xs">Min Percentage (%)</label>
+                            <input type="number" class="form-control text-sm" placeholder="e.g. 50">
+                        </div>
+                        <div>
+                            <label class="form-label text-xs">Date Range</label>
+                            <input type="date" class="form-control text-sm">
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center mt-3">
+                        <div>
+                            <button class="btn btn-outline text-sm" style="padding: 0.5rem 1rem;" onclick="window.showNotification('Exporting Report as PDF...', 'success')">Download PDF</button>
+                            <button class="btn btn-outline text-sm" style="padding: 0.5rem 1rem;" onclick="window.showNotification('Exporting Report as Excel...', 'success')">Download Excel</button>
+                        </div>
+                        <button class="btn btn-primary text-sm" style="padding: 0.5rem 1.5rem;" onclick="window.showNotification('Filters applied', 'success')">Apply Filters</button>
+                    </div>
+                </div>
+
+                <!-- Results Table -->
+                <div class="glass-card" style="padding: 0;">
+                    <div class="table-container shadow-none">
+                        <table id="resultsTable">
+                            <thead>
+                                <tr>
+                                    <th>Student Name</th>
+                                    <th>Class</th>
+                                    <th>School</th>
+                                    <th>Subject</th>
+                                    <th>Score</th>
+                                    <th>Total Q's</th>
+                                    <th>Percentage</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Populated via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+            </div>
+        </main>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!window.api.getToken() || window.api.getRole() !== 'admin') {
+                window.location.href = 'admin-login.html';
+                return;
+            }
+            loadResults();
+            loadFilters();
+        });
+
+        async function loadFilters() {
+            try {
+                const schools = await window.api.getAdminSchools();
+                const schoolFilter = document.getElementById('schoolFilter');
+                schools.forEach(school => {
+                    const option = document.createElement('option');
+                    option.value = school.id;
+                    option.textContent = school.name;
+                    schoolFilter.appendChild(option);
+                });
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        async function loadResults() {
+            try {
+                const results = await window.api.getAdminResults();
+                const tbody = document.querySelector('#resultsTable tbody');
+                tbody.innerHTML = '';
+                
+                if(results.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-grey">No results found.</td></tr>';
+                    return;
+                }
+
+                results.forEach(result => {
+                    const tr = document.createElement('tr');
+                    let badgeColor = 'badge-success';
+                    if (result.score < 80) badgeColor = 'badge-warning';
+                    if (result.score < 50) badgeColor = 'badge-danger';
+
+                    tr.innerHTML = `
+                        <td class="font-bold text-primary">${result.student_name}</td>
+                        <td>Class ${result.class_level || 'N/A'}</td>
+                        <td>${result.school_name || 'N/A'}</td>
+                        <td>${result.exam_title}</td>
+                        <td class="font-bold">${result.score}</td>
+                        <td>-</td>
+                        <td><span class="badge ${badgeColor}">${result.score} marks</span></td>
+                        <td>${new Date(result.date_taken).toLocaleDateString()}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error(error);
+                window.showNotification('Error loading results', 'danger');
+            }
+        }
+    </script>
+</body>
+</html>

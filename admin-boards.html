@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Board Management - Admin Portal</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .admin-layout { display: flex; min-height: 100vh; background-color: #F3F4F6; }
+        .sidebar { width: 260px; background-color: #1F2937; color: white; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid #374151; display: flex; align-items: center; gap: 0.75rem; }
+        .sidebar-header h2 { color: white; font-size: 1.25rem; margin: 0; }
+        .nav-menu { padding: 1rem 0; flex-grow: 1; }
+        .nav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.5rem; color: #D1D5DB; text-decoration: none; transition: all var(--transition-fast); }
+        .nav-item:hover { background-color: #374151; color: white; }
+        .nav-item.active { background-color: var(--primary-color); color: white; border-left: 4px solid #FFF; }
+        .nav-icon { width: 20px; height: 20px; }
+        .main-content { flex-grow: 1; display: flex; flex-direction: column; overflow-x: hidden; }
+        .top-header { background-color: white; height: 64px; padding: 0 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-sm); }
+        .content-area { padding: 2rem; overflow-y: auto; }
+        
+        /* Modal Styles */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity var(--transition-fast); }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-card { background: white; padding: 2rem; border-radius: var(--border-radius-md); max-width: 500px; width: 100%; transform: translateY(20px); transition: transform var(--transition-fast); }
+        .modal-overlay.active .modal-card { transform: translateY(0); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid #E5E7EB; padding-bottom: 1rem; }
+        .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #6B7280; }
+    </style>
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div style="width: 32px; height: 32px; background: var(--primary-color); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                    <svg width="18" height="18" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                </div>
+                <h2>Admin Panel</h2>
+            </div>
+            <nav class="nav-menu">
+                <a href="admin-dashboard.html" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                    Dashboard Overview
+                </a>
+                <a href="admin-students.html" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    Student Management
+                </a>
+                <a href="admin-schools.html" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                    School Management
+                </a>
+                <a href="admin-results.html" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Results & Performance
+                </a>
+                <a href="admin-questions.html" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Exam & Questions
+                </a>
+
+                <div style="padding: 0.75rem 1.5rem; font-size: 0.75rem; text-transform: uppercase; color: #6B7280; font-weight: 700; letter-spacing: 0.05em;">Other Management</div>
+                <a href="admin-boards.html" class="nav-item active">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Board Management
+                </a>
+                <a href="admin-subjects.html" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                    Subject Management
+                </a>
+                <a href="admin-classes.html" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                    Class Management
+                </a>
+                <a href="admin-topics.html" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+                    Topic Management
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div><h3 style="margin: 0;">Board Management</h3></div>
+                <div class="flex items-center gap-4">
+                    <span class="text-sm font-bold">Admin User</span>
+                </div>
+            </header>
+
+            <div class="content-area">
+                <div class="glass-card" style="padding: 1.5rem;">
+                    <div class="flex justify-between items-center mb-6">
+                        <h4 class="mb-0">Educational Boards</h4>
+                        <button class="btn btn-primary" onclick="openModal('addBoardModal')">+ Add New Board</button>
+                    </div>
+
+                    <div class="table-container">
+                        <table id="boardsTable">
+                            <thead>
+                                <tr>
+                                    <th>Board Name</th>
+                                    <th>Description</th>
+                                    <th>Created At</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Populated via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Board Modal -->
+    <div class="modal-overlay" id="addBoardModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 class="mb-0">Add New Board</h3>
+                <button class="modal-close" onclick="closeModal('addBoardModal')">&times;</button>
+            </div>
+            <form id="addBoardForm">
+                <div class="form-group">
+                    <label class="form-label">Board Name *</label>
+                    <input type="text" name="name" class="form-control" placeholder="e.g. CBSE" required>
+                </div>
+                <div class="form-group mt-2">
+                    <label class="form-label">Description</label>
+                    <textarea name="description" class="form-control" rows="3" placeholder="Brief description..."></textarea>
+                </div>
+                <div class="flex justify-end gap-2 mt-4">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('addBoardModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Board</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!window.api.getToken() || window.api.getRole() !== 'admin') {
+                window.location.href = 'admin-login.html';
+                return;
+            }
+            loadBoards();
+        });
+
+        async function loadBoards() {
+            try {
+                window.setTableLoading('boardsTable', true);
+                const boards = await window.api.getAdminBoards();
+                const tbody = document.querySelector('#boardsTable tbody');
+                tbody.innerHTML = '';
+                
+                boards.forEach(board => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="font-bold">${board.name}</td>
+                        <td>${board.description || 'No description'}</td>
+                        <td>${new Date(board.created_at).toLocaleDateString()}</td>
+                        <td>
+                            <div class="flex gap-2">
+                                <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; color: var(--danger); border-color: var(--danger);" onclick="deleteBoard(${board.id})">Delete</button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                window.showNotification('Error loading boards', 'danger');
+            }
+        }
+
+        async function deleteBoard(id) {
+            if (confirm('Are you sure you want to delete this board?')) {
+                try {
+                    await window.api.deleteAdminBoard(id);
+                    window.showNotification('Board deleted successfully', 'success');
+                    loadBoards();
+                } catch (error) {
+                    window.showNotification(error.message || 'Failed to delete board', 'danger');
+                }
+            }
+        }
+
+        document.getElementById('addBoardForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = window.serializeForm(this);
+            const submitBtn = this.querySelector('button[type="submit"]');
+            
+            try {
+                submitBtn.disabled = true;
+                await window.api.addAdminBoard(formData);
+                window.showNotification('Board added successfully!', 'success');
+                closeModal('addBoardModal');
+                this.reset();
+                loadBoards();
+            } catch (error) {
+                window.showNotification(error.message || 'Failed to add board', 'danger');
+            } finally {
+                submitBtn.disabled = false;
+            }
+        });
+
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    </script>
+</body>
+</html>

@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Admin Dashboard - IQ Baba</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .admin-layout {
+            display: flex;
+            min-height: 100vh;
+            background-color: #F3F4F6;
+        }
+        .sidebar {
+            width: 260px;
+            background-color: #1A365D; /* Darker IQ Baba Blue */
+            color: white;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            transition: all var(--transition-fast);
+        }
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .sidebar-header h2 {
+            color: white;
+            font-size: 1.25rem;
+            margin: 0;
+        }
+        .nav-menu {
+            padding: 1rem 0;
+            flex-grow: 1;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            color: #D1D5DB;
+            text-decoration: none;
+            transition: all var(--transition-fast);
+        }
+        .nav-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        .nav-item.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-left: 4px solid #FFF;
+        }
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+        }
+        
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+        .top-header {
+            background-color: white;
+            height: 64px;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-sm);
+        }
+        .content-area {
+            padding: 2rem;
+            overflow-y: auto;
+        }
+        
+        /* Dashboard specific */
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .stat-info h4 {
+            color: var(--text-grey);
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+        }
+        .stat-info p {
+            color: var(--text-dark);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="media/logo-white.png" alt="IQ BABA Logo" class="sidebar-logo">
+            </div>
+            <nav class="nav-menu">
+                <a href="admin-dashboard.html" class="nav-item active">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                    Dashboard Overview
+                </a>
+                <a href="admin-students.html" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    Student Management
+                </a>
+                <a href="admin-schools.html" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                    School Management
+                </a>
+                <a href="admin-results.html" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Results & Performance
+                </a>
+                <a href="admin-questions.html" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Exam & Questions
+                </a>
+                
+                <div style="padding: 0.75rem 1.5rem; font-size: 0.75rem; text-transform: uppercase; color: #6B7280; font-weight: 700; letter-spacing: 0.05em;">Other Management</div>
+                <a href="admin-boards.html" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Board Management
+                </a>
+                <a href="admin-subjects.html" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                    Subject Management
+                </a>
+                <a href="admin-classes.html" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                    Class Management
+                </a>
+                <a href="admin-topics.html" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+                    Topic Management
+                </a>
+            </nav>
+            <div style="padding: 1.5rem; border-top: 1px solid #374151;">
+                <a href="javascript:void(0)" onclick="window.handleLogout()" class="nav-item" style="padding: 0;">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div>
+                    <h3 style="margin: 0; color: var(--text-dark);">Dashboard Overview</h3>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span class="text-sm font-bold">Admin User</span>
+                    <div style="width: 36px; height: 36px; background: #E5E7EB; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <svg width="20" height="20" fill="none" stroke="var(--text-grey)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-area">
+                <!-- Quick Actions -->
+                <div class="flex gap-4 mb-4">
+                    <a href="admin-students.html" class="btn btn-primary">+ Add Student</a>
+                    <a href="admin-results.html" class="btn btn-outline">View Results</a>
+                    <a href="admin-questions.html" class="btn btn-outline">Manage Exams</a>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: rgba(255, 122, 0, 0.1); color: var(--primary-color);">
+                            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        </div>
+                        <div class="stat-info">
+                            <h4>Total Students</h4>
+                            <p id="statTotalStudents">--</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--success);">
+                            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                        </div>
+                        <div class="stat-info">
+                            <h4>Schools Registered</h4>
+                            <p id="statTotalSchools">--</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: rgba(255, 59, 48, 0.1); color: var(--secondary-color);">
+                            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        </div>
+                        <div class="stat-info">
+                            <h4>Exams Conducted</h4>
+                            <p id="statExamsTaken">--</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: rgba(245, 158, 11, 0.1); color: var(--warning);">
+                            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        </div>
+                        <div class="stat-info">
+                            <h4>Total Questions</h4>
+                            <p id="statTotalQuestions">--</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-4">
+                    <!-- Recent Registrations -->
+                    <div class="glass-card" style="padding: 1.5rem;">
+                        <h4 class="mb-3">Recent Student Registrations</h4>
+                        <div class="table-container shadow-none">
+                            <table class="text-sm" id="recentStudentsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>School</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="3" class="text-center text-grey">Loading...</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-bold">Aarav Patel</td>
+                                        <td>Delhi Public School</td>
+                                        <td>Today</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-bold">Sneha Reddy</td>
+                                        <td>National Public School</td>
+                                        <td>Yesterday</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-bold">Vikram Singh</td>
+                                        <td>Kendriya Vidyalaya</td>
+                                        <td>2 Days ago</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Recent Submissions -->
+                    <div class="glass-card" style="padding: 1.5rem;">
+                        <h4 class="mb-3">Recent Exam Submissions</h4>
+                        <div class="table-container shadow-none">
+                            <table class="text-sm" id="recentResultsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Student</th>
+                                        <th>Exam</th>
+                                        <th>Score</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="3" class="text-center text-grey">Loading...</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-bold">Rahul Sharma</td>
+                                        <td>Mathematics</td>
+                                        <td><span class="badge badge-success">Completed</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-bold">Priya Patel</td>
+                                        <td>Science</td>
+                                        <td><span class="badge badge-success">Completed</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-bold">Amit Kumar</td>
+                                        <td>English</td>
+                                        <td><span class="badge badge-success">Completed</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="js/app.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (!window.api.getToken() || window.api.getRole() !== 'admin') {
+                window.location.href = 'admin-login.html';
+                return;
+            }
+
+            try {
+                const stats = await window.api.getAdminStats();
+                document.getElementById('statTotalStudents').textContent = stats.totalStudents;
+                document.getElementById('statTotalSchools').textContent = stats.totalSchools;
+                document.getElementById('statExamsTaken').textContent = stats.examsTaken;
+                document.getElementById('statTotalQuestions').textContent = stats.totalQuestions;
+
+                // Load recent students dynamically
+                const students = await window.api.getAdminStudents();
+                const studentTbody = document.querySelector('#recentStudentsTable tbody');
+                studentTbody.innerHTML = '';
+                students.slice(0, 3).forEach(s => {
+                    studentTbody.innerHTML += `
+                        <tr>
+                            <td class="font-bold">${s.full_name}</td>
+                            <td>${s.school_name || 'N/A'}</td>
+                            <td>${new Date(s.registration_date).toLocaleDateString()}</td>
+                        </tr>
+                    `;
+                });
+
+                // Load recent results dynamically
+                const results = await window.api.getAdminResults();
+                const resultTbody = document.querySelector('#recentResultsTable tbody');
+                resultTbody.innerHTML = '';
+                results.slice(0, 3).forEach(r => {
+                    resultTbody.innerHTML += `
+                        <tr>
+                            <td class="font-bold">${r.student_name}</td>
+                            <td>${r.exam_title}</td>
+                            <td><span class="badge badge-success">${r.score} marks</span></td>
+                        </tr>
+                    `;
+                });
+
+            } catch (error) {
+                console.error("Failed to load dashboard data", error);
+            }
+        });
+    </script>
+</body>
+</html>

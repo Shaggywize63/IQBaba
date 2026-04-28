@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submission Complete - IQ Baba</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .thank-you-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #F9FAFB;
+        }
+        .success-card {
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            padding: 3rem 2rem;
+        }
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+        }
+        .exam-details {
+            background: #F3F4F6;
+            border-radius: var(--border-radius-md);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            text-align: left;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+        .detail-row:last-child {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="thank-you-page">
+        <div class="glass-card success-card">
+            <div class="success-icon">
+                <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            </div>
+            
+            <h2 class="mb-2">Exam Submitted Successfully!</h2>
+            <p>Thank you for participating. Your responses have been recorded securely.</p>
+            
+            <div class="exam-details">
+                <div class="detail-row">
+                    <span class="text-grey font-bold">Subject:</span>
+                    <span id="subjectName">Mathematics Olympiad</span>
+                </div>
+                <div class="detail-row">
+                    <span class="text-grey font-bold">Completion Time:</span>
+                    <span id="completionTime">Loading...</span>
+                </div>
+                <div class="detail-row mt-2 pt-2" style="border-top: 1px solid #E5E7EB;">
+                    <span class="text-grey font-bold">Status:</span>
+                    <span class="badge badge-success">Completed</span>
+                </div>
+            </div>
+            
+            <div class="alert alert-warning text-left mb-4">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span class="text-sm">Results will be announced on your dashboard within 7 working days. Note: You cannot retake this exam.</span>
+            </div>
+            
+            <a href="student-dashboard.html" class="btn btn-primary btn-block">Back to Dashboard</a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('completionTime').textContent = `${dateStr} at ${timeStr}`;
+        });
+    </script>
+</body>
+</html>

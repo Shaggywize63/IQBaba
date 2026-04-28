@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results & Performance - School Portal</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .admin-layout { display: flex; min-height: 100vh; background-color: #F8F9FA; }
+        .sidebar { width: 260px; background-color: #0f172a; color: white; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid #1e293b; display: flex; align-items: center; gap: 0.75rem; }
+        .sidebar-header h2 { color: white; font-size: 1.25rem; margin: 0; font-family: var(--font-heading); }
+        .nav-menu { padding: 1rem 0; flex-grow: 1; }
+        .nav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.5rem; color: #94a3b8; text-decoration: none; font-weight: 500; transition: all var(--transition-fast); }
+        .nav-item:hover { background-color: #1e293b; color: white; }
+        .nav-item.active { background-color: var(--accent-blue); color: white; border-left: 4px solid #FFF; }
+        .nav-icon { width: 20px; height: 20px; }
+        .main-content { flex-grow: 1; display: flex; flex-direction: column; overflow-x: hidden; }
+        .top-header { background-color: white; height: 64px; padding: 0 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-sm); }
+        .content-area { padding: 2rem; overflow-y: auto; }
+        
+        .filter-panel { background: white; padding: 1.5rem; border-radius: var(--border-radius-lg); box-shadow: var(--shadow-sm); margin-bottom: 1.5rem; }
+        .filter-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+    </style>
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div style="width: 32px; height: 32px; background: var(--accent-blue); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                    <svg width="18" height="18" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                </div>
+                <h2>School Portal</h2>
+            </div>
+            <nav class="nav-menu">
+                <a href="school-dashboard.html" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                    Dashboard Overview
+                </a>
+                <a href="school-students.html" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    Student Management
+                </a>
+                <a href="school-results.html" class="nav-item active">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Results & Performance
+                </a>
+            </nav>
+            <div style="padding: 1.5rem; border-top: 1px solid #1e293b;">
+                <a href="javascript:void(0)" onclick="window.handleLogout()" class="nav-item" style="padding: 0;">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div><h3 style="margin: 0;">Results & Performance</h3></div>
+                <div class="flex items-center gap-4">
+                    <span class="chip chip-blue">School Admin</span>
+                </div>
+            </header>
+
+            <div class="content-area">
+                
+                <!-- Filters -->
+                <div class="filter-panel">
+                    <h4 class="mb-3">Filter Student Results</h4>
+                    <div class="filter-grid">
+                        <div>
+                            <label class="form-label text-xs">Class</label>
+                            <select class="form-control text-sm">
+                                <option value="">All Classes</option>
+                                <option value="6">Class 6</option>
+                                <option value="9">Class 9</option>
+                                <option value="10">Class 10</option>
+                                <option value="11">Class 11</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label text-xs">Subject</label>
+                            <select class="form-control text-sm" id="subjectFilter">
+                                <option value="">All Subjects</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label text-xs">Min Percentage (%)</label>
+                            <input type="number" class="form-control text-sm" placeholder="e.g. 50">
+                        </div>
+                        <div>
+                            <label class="form-label text-xs">Date Range</label>
+                            <input type="date" class="form-control text-sm">
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center mt-3">
+                        <div>
+                            <button class="btn btn-outline text-sm" style="padding: 0.5rem 1rem;" onclick="window.showNotification('Exporting Report as PDF...', 'success')">Download PDF</button>
+                            <button class="btn btn-outline text-sm" style="padding: 0.5rem 1rem;" onclick="window.showNotification('Exporting Report as Excel...', 'success')">Download Excel</button>
+                        </div>
+                        <button class="btn" style="background: var(--accent-blue); color: white; padding: 0.5rem 1.5rem;" onclick="window.showNotification('Filters applied', 'success')">Apply Filters</button>
+                    </div>
+                </div>
+
+                <!-- Results Table -->
+                <div class="glass-card" style="padding: 0;">
+                    <div class="table-container shadow-none" style="border: 1px solid #E5E7EB;">
+                        <table id="resultsTable">
+                            <thead style="background: #F9FAFB;">
+                                <tr>
+                                    <th>Student Name</th>
+                                    <th>Class</th>
+                                    <th>Subject</th>
+                                    <th>Score</th>
+                                    <th>Total Q's</th>
+                                    <th>Percentage</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Populated via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+            </div>
+        </main>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!window.api.getToken() || window.api.getRole() !== 'school') {
+                window.location.href = 'school-login.html';
+                return;
+            }
+            loadResults();
+        });
+
+        async function loadResults() {
+            try {
+                const response = await window.api.getSchoolResults();
+                const results = response.results || [];
+                const tbody = document.querySelector('#resultsTable tbody');
+                tbody.innerHTML = '';
+                
+                if(results.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-grey">No results found for your students.</td></tr>';
+                    return;
+                }
+
+                results.forEach(result => {
+                    const tr = document.createElement('tr');
+                    let chipClass = 'chip-green';
+                    if (result.percentage < 80) chipClass = 'chip-yellow';
+                    if (result.percentage < 50) chipClass = 'chip-purple';
+
+                    tr.innerHTML = `
+                        <td class="font-bold text-primary">${result.student_name}</td>
+                        <td>Class ${result.class_level || 'N/A'}</td>
+                        <td>${result.exam_title}</td>
+                        <td class="font-bold">${result.score}</td>
+                        <td>-</td>
+                        <td><span class="chip ${chipClass}">${result.percentage}%</span></td>
+                        <td>${new Date(result.date_taken).toLocaleDateString()}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error(error);
+                window.showNotification('Error loading results', 'danger');
+            }
+        }
+    </script>
+</body>
+</html>

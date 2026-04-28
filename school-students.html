@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Management - School Portal</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .admin-layout { display: flex; min-height: 100vh; background-color: #F8F9FA; }
+        .sidebar { width: 260px; background-color: #0f172a; color: white; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid #1e293b; display: flex; align-items: center; gap: 0.75rem; }
+        .sidebar-header h2 { color: white; font-size: 1.25rem; margin: 0; font-family: var(--font-heading); }
+        .nav-menu { padding: 1rem 0; flex-grow: 1; }
+        .nav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.5rem; color: #94a3b8; text-decoration: none; font-weight: 500; }
+        .nav-item:hover { background-color: #1e293b; color: white; }
+        .nav-item.active { background-color: var(--accent-blue); color: white; border-left: 4px solid #FFF; }
+        .nav-icon { width: 20px; height: 20px; }
+        .main-content { flex-grow: 1; display: flex; flex-direction: column; overflow-x: hidden; }
+        .top-header { background-color: white; height: 64px; padding: 0 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-sm); }
+        .content-area { padding: 2rem; overflow-y: auto; }
+        
+        /* Modal Styles */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity var(--transition-fast); }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-card { background: white; padding: 2rem; border-radius: var(--border-radius-md); max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; transform: translateY(20px); transition: transform var(--transition-fast); }
+        .modal-overlay.active .modal-card { transform: translateY(0); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid #E5E7EB; padding-bottom: 1rem; }
+        .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #6B7280; }
+        
+        /* Table Controls */
+        .table-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem; }
+        .search-box { display: flex; align-items: center; background: white; border: 1px solid #E5E7EB; border-radius: var(--border-radius-md); padding: 0.5rem 1rem; width: 300px; }
+        .search-box input { border: none; outline: none; width: 100%; margin-left: 0.5rem; }
+    </style>
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div style="width: 32px; height: 32px; background: var(--accent-blue); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                    <svg width="18" height="18" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                </div>
+                <h2>School Portal</h2>
+            </div>
+            <nav class="nav-menu">
+                <a href="school-dashboard.html" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                    Dashboard Overview
+                </a>
+                <a href="school-students.html" class="nav-item active">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    Student Management
+                </a>
+                <a href="school-results.html" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Results & Performance
+                </a>
+            </nav>
+            <div style="padding: 1.5rem; border-top: 1px solid #374151;">
+                <a href="javascript:void(0)" onclick="window.handleLogout()" class="nav-item" style="padding: 0;">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div><h3 style="margin: 0;">Student Management</h3></div>
+                <div class="flex items-center gap-4">
+                    <span class="chip chip-blue">School Admin</span>
+                </div>
+            </header>
+
+            <div class="content-area">
+                <div class="glass-card" style="padding: 1.5rem;">
+                    
+                    <div class="table-controls">
+                        <div class="search-box">
+                            <svg width="16" height="16" fill="none" stroke="#6B7280" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            <input type="text" id="searchInput" placeholder="Search by name or username...">
+                        </div>
+                        <div class="flex gap-2">
+                            <button class="btn btn-outline" onclick="exportStudents()" style="border-color: var(--accent-blue); color: var(--accent-blue);">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right:0.5rem;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                Export CSV
+                            </button>
+                            <button class="btn btn-outline" onclick="openModal('bulkModal')" style="border-color: var(--accent-blue); color: var(--accent-blue);">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right:0.5rem;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                Upload Students (Excel/CSV)
+                            </button>
+                            <button class="btn" style="background: var(--accent-blue); color: white;" onclick="openModal('addStudentModal')">+ Add Student</button>
+                        </div>
+                    </div>
+
+                    <div class="table-container shadow-none" style="border: 1px solid #E5E7EB;">
+                        <table id="studentsTable">
+                            <thead style="background: #F9FAFB;">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Class</th>
+                                    <th>Username</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Populated via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="flex justify-between items-center mt-4 text-sm text-grey">
+                        <div>Showing 1 to 3 of 342 entries</div>
+                        <div class="flex gap-1">
+                            <button class="btn btn-outline" style="padding: 0.25rem 0.5rem;" disabled>&lt;</button>
+                            <button class="btn" style="background: var(--accent-blue); color: white; padding: 0.25rem 0.75rem;">1</button>
+                            <button class="btn btn-outline" style="padding: 0.25rem 0.75rem;">2</button>
+                            <button class="btn btn-outline" style="padding: 0.25rem 0.75rem;">3</button>
+                            <button class="btn btn-outline" style="padding: 0.25rem 0.5rem;">&gt;</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Student Modal -->
+    <div class="modal-overlay" id="addStudentModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 class="mb-0">Add New Student</h3>
+                <button class="modal-close" onclick="closeModal('addStudentModal')">&times;</button>
+            </div>
+            <form id="addStudentForm">
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div class="form-group">
+                        <label class="form-label">Full Name *</label>
+                        <input type="text" name="fullName" class="form-control" placeholder="e.g. Rahul Sharma" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Username *</label>
+                        <input type="text" name="username" class="form-control" placeholder="e.g. rahul123" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Class *</label>
+                        <select name="studentClass" class="form-control" required>
+                            <option value="">Select Class</option>
+                            <option value="6">Class 6</option>
+                            <option value="7">Class 7</option>
+                            <option value="8">Class 8</option>
+                            <option value="9">Class 9</option>
+                            <option value="10">Class 10</option>
+                            <option value="11">Class 11</option>
+                            <option value="12">Class 12</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Board *</label>
+                        <select name="board" class="form-control" required>
+                            <option value="">Select Board</option>
+                            <option value="CBSE">CBSE</option>
+                            <option value="ICSE">ICSE</option>
+                            <option value="State Board">State Board</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" placeholder="rahul@example.com">
+                    </div>
+                </div>
+                <div class="form-group mt-2">
+                    <label class="form-label">Password *</label>
+                    <input type="text" name="password" class="form-control" value="password123" required>
+                    <small class="text-grey">Default is password123</small>
+                </div>
+                <div class="flex justify-end gap-2 mt-4">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('addStudentModal')">Cancel</button>
+                    <button type="submit" class="btn" style="background: var(--accent-blue); color: white;">Save Student</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bulk Upload Modal -->
+    <div class="modal-overlay" id="bulkModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 class="mb-0">Bulk Student Upload</h3>
+                <button class="modal-close" onclick="closeModal('bulkModal')">&times;</button>
+            </div>
+            <div class="mb-4">
+                <p>1. Download the Excel template</p>
+                <button class="btn btn-outline btn-block mb-3" style="border-color: var(--accent-blue); color: var(--accent-blue);">Download Template.xlsx</button>
+                
+                <p>2. Upload filled Excel file</p>
+                <div style="border: 2px dashed #cbd5e1; border-radius: var(--border-radius-md); padding: 2rem; text-align: center; background: #f8fafc; cursor: pointer;">
+                    <svg width="40" height="40" fill="none" stroke="#94a3b8" viewBox="0 0 24 24" style="margin: 0 auto 1rem;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                    <p class="text-sm font-bold text-dark">Drag and drop your Excel file here</p>
+                    <p class="text-xs text-light">or click to browse</p>
+                    <input type="file" style="display:none;" id="fileUpload">
+                </div>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button type="button" class="btn btn-outline" onclick="closeModal('bulkModal')">Cancel</button>
+                <button type="button" class="btn" style="background: var(--accent-blue); color: white;" onclick="handleFormSubmit(event, 'bulkModal', 'File uploaded successfully!')">Upload & Process</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!window.api.getToken() || window.api.getRole() !== 'school') {
+                window.location.href = 'school-login.html';
+                return;
+            }
+            loadStudents();
+        });
+
+        async function loadStudents() {
+            try {
+                window.setTableLoading('studentsTable', true);
+                const response = await window.api.getSchoolStudents();
+                const students = response.students || [];
+                const tbody = document.querySelector('#studentsTable tbody');
+                tbody.innerHTML = '';
+                
+                if(students.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-grey">No students registered yet.</td></tr>';
+                    return;
+                }
+
+                students.forEach(student => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="font-bold">${student.full_name}</td>
+                        <td>Class ${student.class_level}</td>
+                        <td>${student.username}</td>
+                        <td><span class="chip chip-green">Active</span></td>
+                        <td>
+                            <div class="flex gap-2">
+                                <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="viewStudent(${student.id})">View</button>
+                                <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="editStudent(${student.id})">Edit</button>
+                                <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; color: var(--danger); border-color: var(--danger);" onclick="deleteStudent(${student.id})">Delete</button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error(error);
+                window.showNotification('Error loading students', 'danger');
+            }
+        }
+
+        async function exportStudents() {
+            try {
+                const response = await window.api.getSchoolStudents();
+                const students = response.students || [];
+                if (students.length === 0) {
+                    window.showNotification('No data to export', 'warning');
+                    return;
+                }
+
+                const headers = ['Name', 'Class', 'Username', 'Email', 'Board', 'Registration Date'];
+                const csvRows = [headers.join(',')];
+                
+                students.forEach(s => {
+                    const row = [
+                        `"${s.full_name}"`,
+                        `"${s.class_level}"`,
+                        `"${s.username}"`,
+                        `"${s.email || ''}"`,
+                        `"${s.board || ''}"`,
+                        `"${new Date(s.registration_date).toLocaleDateString()}"`
+                    ];
+                    csvRows.push(row.join(','));
+                });
+
+                const csvContent = csvRows.join('\n');
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.setAttribute('href', url);
+                a.setAttribute('download', `school_students_export_${new Date().getTime()}.csv`);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                
+                window.showNotification('Data exported successfully!', 'success');
+            } catch (error) {
+                window.showNotification('Export failed', 'danger');
+            }
+        }
+
+        async function deleteStudent(id) {
+            if (confirm('Are you sure you want to delete this student?')) {
+                try {
+                    window.showNotification('Student deleted successfully (Simulated)', 'success');
+                    loadStudents();
+                } catch (error) {
+                    window.showNotification('Failed to delete student', 'danger');
+                }
+            }
+        }
+
+        function editStudent(id) {
+            window.showNotification('Edit functionality coming soon!', 'info');
+        }
+
+        function viewStudent(id) {
+            window.showNotification('Viewing student details...', 'info');
+        }
+
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+        }
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+        function handleFormSubmit(e, modalId, msg = 'Student saved successfully!') {
+            if(e) e.preventDefault();
+            closeModal(modalId);
+            window.showNotification(msg, 'success');
+        }
+
+        document.getElementById('addStudentForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = window.serializeForm(this);
+            const submitBtn = this.querySelector('button[type="submit"]');
+            
+            try {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Saving...';
+                
+                await window.api.addSchoolStudent(formData);
+                
+                window.showNotification('Student created successfully!', 'success');
+                closeModal('addStudentModal');
+                this.reset();
+                loadStudents();
+            } catch (error) {
+                window.showNotification(error.message || 'Failed to create student', 'danger');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Save Student';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IQ Baba | Master Your Future</title>
+    <meta name="description" content="IQ Baba is the ultimate platform for students to master Olympiads through scientific practice and logic-building.">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        :root {
+            --hero-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        
+        body {
+            overflow-x: hidden;
+        }
+
+        .logo-img {
+            height: 60px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .landing-nav {
+            padding: 1.5rem 0;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .logo-text {
+            font-size: 1.75rem;
+            font-weight: 900;
+            color: var(--primary-color);
+            letter-spacing: -0.02em;
+        }
+
+        .hero-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding-top: 80px;
+            background: var(--hero-gradient);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-content {
+            flex: 1;
+            z-index: 2;
+        }
+
+        .hero-image-wrapper {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-image-wrapper img {
+            width: 110%;
+            max-width: 800px;
+            filter: drop-shadow(0 20px 50px rgba(0,0,0,0.1));
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .hero-title {
+            font-size: clamp(3rem, 8vw, 5.5rem);
+            line-height: 1.1;
+            margin-bottom: 2rem;
+            color: var(--text-dark);
+        }
+
+        .hero-title span {
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .section-title {
+            font-size: 3.5rem;
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            display: inline-block;
+        }
+
+        .bento-item h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .bento-item p {
+            font-size: 1rem;
+            color: var(--text-grey);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+            padding: 6rem 0;
+            background: white;
+            border-radius: 40px;
+            margin: 4rem 0;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.03);
+        }
+
+        .stat-card {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            display: block;
+        }
+
+        .cta-box {
+            background: #111827;
+            color: white;
+            padding: 8rem 2rem;
+            border-radius: 50px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 6rem;
+        }
+
+        .cta-box h2 {
+            color: white;
+            font-size: 4rem;
+            margin-bottom: 2rem;
+        }
+
+        .floating-blob {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: var(--primary-color);
+            filter: blur(100px);
+            opacity: 0.2;
+            z-index: 0;
+            border-radius: 50%;
+        }
+
+        @media (max-width: 992px) {
+            .hero-container {
+                flex-direction: column;
+                text-align: center;
+                padding-top: 120px;
+            }
+            .hero-image-wrapper {
+                margin-top: 4rem;
+            }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            .hero-title {
+                font-size: 3rem;
+            }
+            .section-title {
+                font-size: 2.5rem;
+            }
+            .cta-box h2 {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="landing-nav">
+        <div class="container flex justify-between items-center">
+            <a href="index.html" class="logo-text">
+                <img src="media/logo.png" alt="IQ BABA Logo" class="logo-img">
+            </a>
+            <div class="flex gap-12 items-center">
+                <a href="#features" class="font-medium text-dark hover:text-primary transition-all">Explore</a>
+                <a href="#why" class="font-medium text-dark hover:text-primary transition-all">Why Us</a>
+                <a href="school-login.html" class="btn btn-outline" style="padding: 0.6rem 1.5rem; font-size: 0.95rem;">School Portal</a>
+                <a href="student-login.html" class="btn btn-primary btn-glow" style="padding: 0.6rem 1.8rem; font-size: 0.95rem;">Student Login</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="hero-container">
+        <div class="container flex items-center">
+            <div class="hero-content reveal">
+                <div class="chip chip-primary mb-6">✨ THE FUTURE OF LEARNING</div>
+                <h1 class="hero-title">Unlock Your<br><span>Infinite Potential.</span></h1>
+                <p class="text-xl text-grey mb-10 max-w-lg">
+                    Join the world's most creative Olympiad platform. We don't just test your knowledge; we ignite your curiosity and build your logical legacy.
+                </p>
+                <div class="flex gap-6">
+                    <a href="student-register.html" class="btn btn-primary btn-glow" style="padding: 1.25rem 3rem; font-size: 1.1rem;">
+                        Start Your Journey
+                    </a>
+                    <a href="#features" class="btn btn-outline" style="padding: 1.25rem 3rem; font-size: 1.1rem;">
+                        See Features
+                    </a>
+                </div>
+            </div>
+            <div class="hero-image-wrapper reveal" style="transition-delay: 0.2s;">
+                <img src="media/hero.png" alt="Student Achievement">
+            </div>
+        </div>
+    </header>
+
+    <!-- Bento Features Section -->
+    <section id="features" class="container" style="padding: 10rem 0;">
+        <h2 class="section-title reveal">Designed for <span>Excellence</span></h2>
+        
+        <div class="bento-grid">
+            <div class="bento-item large reveal">
+                <div>
+                    <span class="feature-icon">🧠</span>
+                    <h3>Adaptive Practice</h3>
+                    <p>Our AI analyzes your weak spots and crafts personalized practice paths. No two journeys are the same.</p>
+                </div>
+                <div class="mt-8">
+                    <div style="width: 100%; height: 200px; background: #f0f4f8; border-radius: 20px; display: flex; align-items: center; justify-content: center;">
+                        <img src="media/logic.png" alt="Logic" style="width: 150px; animation: float-delayed 5s infinite;">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bento-item reveal" style="transition-delay: 0.1s;">
+                <span class="feature-icon">⚡</span>
+                <h3>Real-time Exams</h3>
+                <p>Experience the thrill of live competition with our state-of-the-art exam interface.</p>
+            </div>
+            
+            <div class="bento-item reveal" style="transition-delay: 0.2s;">
+                <span class="feature-icon">📊</span>
+                <h3>Deep Analytics</h3>
+                <p>Visualize your progress with beautiful heatmaps and performance charts.</p>
+            </div>
+            
+            <div class="bento-item wide reveal" style="transition-delay: 0.3s; background: var(--primary-color); color: white;">
+                <h3 style="color: white;">Join 50,000+ Champions</h3>
+                <p style="color: rgba(255,255,255,0.8);">Be part of a global community of elite students pushing the boundaries of what's possible.</p>
+                <div class="flex mt-6 gap-2">
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background: #ddd; border: 2px solid white;"></div>
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background: #ccc; border: 2px solid white; margin-left: -15px;"></div>
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background: #bbb; border: 2px solid white; margin-left: -15px;"></div>
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background: #aaa; border: 2px solid white; margin-left: -15px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #333;">+49k</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why Us Section -->
+    <section id="why" style="background: #fff; padding: 10rem 0;">
+        <div class="container grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div class="reveal">
+                <img src="media/trophy.png" alt="Success" style="width: 100%; max-width: 500px;">
+            </div>
+            <div class="reveal" style="transition-delay: 0.2s;">
+                <div class="chip chip-yellow mb-6">🏆 WHY IQ BABA?</div>
+                <h2 class="hero-title" style="font-size: 3.5rem;">Your Victory,<br>Scientifically Guided.</h2>
+                <p class="text-lg text-grey mb-8">
+                    We believe every student has a genius within. IQ Baba provides the tools, the content, and the environment to bring that genius to light.
+                </p>
+                <ul class="flex flex-col gap-4">
+                    <li class="flex items-center gap-3">
+                        <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--success); color: white; display: flex; align-items: center; justify-content: center; font-size: 12px;">✓</div>
+                        <span class="font-medium">Curated Question Banks by Experts</span>
+                    </li>
+                    <li class="flex items-center gap-3">
+                        <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--success); color: white; display: flex; align-items: center; justify-content: center; font-size: 12px;">✓</div>
+                        <span class="font-medium">National & International Benchmarking</span>
+                    </li>
+                    <li class="flex items-center gap-3">
+                        <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--success); color: white; display: flex; align-items: center; justify-content: center; font-size: 12px;">✓</div>
+                        <span class="font-medium">Interactive Video Solutions</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <div class="container">
+        <div class="stats-grid reveal">
+            <div class="stat-card">
+                <span class="stat-number">12+</span>
+                <p>Olympiad Categories</p>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">500k</span>
+                <p>Questions Answered</p>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">1k+</span>
+                <p>Schools Registered</p>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">98%</span>
+                <p>Success Rate</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="container">
+        <section class="cta-box reveal">
+            <div class="floating-blob" style="top: -20%; left: -10%;"></div>
+            <div class="floating-blob" style="bottom: -20%; right: -10%; background: var(--secondary-color);"></div>
+            <div style="position: relative; z-index: 1;">
+                <h2>Ready to claim your <span>throne?</span></h2>
+                <p class="text-xl mb-12" style="color: rgba(255,255,255,0.7); max-width: 600px; margin-left: auto; margin-right: auto;">
+                    The journey to academic greatness starts with a single click. Join thousands of students today.
+                </p>
+                <div class="flex flex-center gap-6">
+                    <a href="student-register.html" class="btn btn-secondary btn-glow" style="padding: 1.5rem 4rem; font-size: 1.2rem;">
+                        Register Now
+                    </a>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer style="padding: 6rem 0 3rem; background: #f8f9fa;">
+        <div class="container">
+            <div class="footer-grid mb-16">
+                <div class="col-span-1 md:col-span-2" style="padding-right: 2rem;">
+                    <a href="#">
+                        <img src="media/logo.png" alt="IQ BABA Logo" class="logo-img" style="height: 90px; margin-bottom: 1.5rem;">
+                    </a>
+                    <p class="max-w-sm" style="line-height: 1.7;">The world's most advanced Olympiad preparation platform for students who want to lead the future.</p>
+                </div>
+                <div>
+                    <h4 class="mb-6">Platform</h4>
+                    <ul class="footer-nav">
+                        <li><a href="student-login.html" class="text-grey hover:text-primary transition-all">Student Portal</a></li>
+                        <li><a href="school-login.html" class="text-grey hover:text-primary transition-all">School Portal</a></li>
+                        <li><a href="#" class="text-grey hover:text-primary transition-all">How it Works</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="mb-6">Connect</h4>
+                    <ul class="footer-nav">
+                        <li><a href="mailto:hello@iqbaba.com" class="text-grey hover:text-primary transition-all">Contact Us</a></li>
+                        <li><a href="#" class="text-grey hover:text-primary transition-all">Instagram</a></li>
+                        <li><a href="#" class="text-grey hover:text-primary transition-all">LinkedIn</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="pt-8 border-top flex justify-between items-center flex-wrap gap-4" style="border-top: 1px solid #dee2e6;">
+                <p class="text-sm text-grey">&copy; 2026 IQ Baba Portal. All rights reserved.</p>
+                <div class="flex gap-6">
+                    <a href="#" class="text-sm text-grey hover:text-primary">Privacy Policy</a>
+                    <a href="#" class="text-sm text-grey hover:text-primary">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Reveal animations on scroll
+        const revealElements = document.querySelectorAll('.reveal');
+        
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                }
+            });
+        }, { threshold: 0.15 });
+
+        revealElements.forEach(el => revealObserver.observe(el));
+    </script>
+</body>
+</html>
