@@ -3,93 +3,224 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Dashboard - IQ Baba</title>
+    <title>Dashboard | IQ Baba</title>
+    <link rel="icon" href="media/logo.png">
     <link rel="stylesheet" href="css/styles.css">
     <style>
-        .dashboard-header {
-            background: white;
-            box-shadow: var(--shadow-sm);
+        body { background: var(--bg-main); }
+
+        /* Header */
+        .dash-nav {
+            background: rgba(250, 244, 236, 0.85);
+            backdrop-filter: blur(20px) saturate(140%);
+            -webkit-backdrop-filter: blur(20px) saturate(140%);
+            border-bottom: 1px solid rgba(14, 42, 71, 0.08);
             padding: 1rem 0;
-            margin-bottom: 2rem;
+            position: sticky; top: 0; z-index: 100;
         }
-        .header-content {
-            display: flex;
+        .dash-nav-inner {
+            max-width: 1280px; margin: 0 auto; padding: 0 1.5rem;
+            display: flex; align-items: center; justify-content: space-between; gap: 1.2rem;
+        }
+        .dash-brand { display: flex; align-items: center; gap: 0.7rem; }
+        .dash-brand img { height: 38px; }
+        .dash-brand span { font-family: var(--font-heading); font-weight: 800; color: var(--accent-deep); letter-spacing: -0.02em; }
+        .dash-actions { display: flex; align-items: center; gap: 0.6rem; }
+        .pill-btn {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.6rem 1.1rem; border-radius: 999px;
+            font-family: var(--font-heading); font-weight: 600; font-size: 0.92rem;
+            border: 1.5px solid rgba(14,42,71,0.15);
+            color: var(--accent-deep); background: white;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+        .pill-btn:hover { border-color: var(--accent-deep); background: var(--accent-deep); color: white; }
+        .pill-btn.solid { background: var(--accent-deep); color: white; border-color: var(--accent-deep); }
+        .pill-btn.solid:hover { background: var(--secondary-color); border-color: var(--secondary-color); }
+
+        /* Hero strip */
+        .dash-hero {
+            max-width: 1280px; margin: 2.5rem auto 2rem; padding: 0 1.5rem;
+            display: grid; grid-template-columns: 1.5fr 1fr; gap: 1.5rem; align-items: stretch;
+        }
+        @media (max-width: 900px) { .dash-hero { grid-template-columns: 1fr; } }
+        .dash-greeting {
+            background: var(--accent-deep); color: white;
+            border-radius: 28px; padding: 2.5rem;
+            position: relative; overflow: hidden; isolation: isolate;
+        }
+        .dash-greeting::before {
+            content: ""; position: absolute; top: -120px; right: -100px;
+            width: 380px; height: 380px; border-radius: 50%;
+            background: radial-gradient(circle, var(--secondary-color) 0%, transparent 65%);
+            opacity: 0.55; z-index: -1;
+        }
+        .dash-greeting .eyebrow { color: var(--accent-yellow); }
+        .dash-greeting .eyebrow::before { background: var(--accent-yellow); }
+        .dash-greeting h1 {
+            font-family: var(--font-heading); font-weight: 800;
+            font-size: clamp(2rem, 4vw, 3rem); line-height: 1.05;
+            letter-spacing: -0.03em; color: white; margin-top: 1rem;
+        }
+        .dash-greeting h1 em { font-family: var(--font-serif); font-style: italic; font-weight: 400; color: var(--accent-yellow); }
+        .dash-greeting p { color: rgba(255,255,255,0.72); margin-top: 0.85rem; max-width: 38ch; }
+        .dash-meta-row { display: flex; gap: 2rem; margin-top: 1.6rem; flex-wrap: wrap; }
+        .dash-meta-row .pair .num { font-family: var(--font-heading); font-weight: 800; font-size: 1.7rem; color: var(--accent-yellow); letter-spacing: -0.02em; }
+        .dash-meta-row .pair .lbl { font-family: var(--font-heading); font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(255,255,255,0.55); margin-top: 0.2rem; }
+
+        .dash-side-card {
+            background: white; border-radius: 28px; padding: 2rem;
+            border: 1px solid rgba(14,42,71,0.08);
+            display: flex; flex-direction: column; gap: 1rem;
             justify-content: space-between;
-            align-items: center;
         }
-        .profile-info h2 {
-            margin-bottom: 0;
-            color: var(--primary-color);
+        .dash-side-card .label { font-family: var(--font-heading); font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-grey); }
+        .dash-side-card h3 { font-family: var(--font-heading); font-weight: 700; font-size: 1.35rem; color: var(--accent-deep); letter-spacing: -0.02em; margin: 0.5rem 0; }
+        .dash-side-card .streak-grid { display: grid; grid-template-columns: repeat(14, 1fr); gap: 4px; }
+        .dash-side-card .streak-grid div { aspect-ratio: 1; border-radius: 5px; background: rgba(14,42,71,0.08); }
+        .dash-side-card .streak-grid div.l1 { background: rgba(255,153,51,0.35); }
+        .dash-side-card .streak-grid div.l2 { background: rgba(255,153,51,0.65); }
+        .dash-side-card .streak-grid div.l3 { background: var(--secondary-color); }
+        .dash-side-card .streak-grid div.l4 { background: var(--accent-deep); }
+
+        /* Section heads */
+        .sec { max-width: 1280px; margin: 0 auto; padding: 2.5rem 1.5rem; }
+        .sec-head {
+            display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem;
+            margin-bottom: 1.5rem; flex-wrap: wrap;
         }
-        .profile-info p {
-            margin-bottom: 0;
-            font-size: 0.875rem;
+        .sec-head h2 {
+            font-family: var(--font-heading); font-weight: 800;
+            font-size: clamp(1.6rem, 3vw, 2.2rem); line-height: 1.05;
+            letter-spacing: -0.02em; color: var(--accent-deep); margin: 0;
         }
-        .subject-card {
-            transition: transform var(--transition-fast), box-shadow var(--transition-fast);
-            position: relative;
+        .sec-head h2 em { font-family: var(--font-serif); font-style: italic; font-weight: 400; color: var(--secondary-color); }
+        .sec-head .meta { font-family: var(--font-heading); font-size: 0.78rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-grey); }
+
+        /* Subjects grid */
+        .subj-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.2rem;
+        }
+        .subj-card {
+            position: relative; background: white;
+            border-radius: 24px; padding: 1.8rem;
+            border: 1px solid rgba(14,42,71,0.08);
+            transition: transform 0.5s cubic-bezier(0.16,1,0.3,1), box-shadow 0.4s ease;
+            display: flex; flex-direction: column; gap: 1rem;
+        }
+        .subj-card:hover { transform: translateY(-5px); box-shadow: 0 25px 50px -25px rgba(14,42,71,0.18); }
+        .subj-card.completed { background: var(--accent-cream); }
+        .subj-card .badge-mini {
+            position: absolute; top: 1rem; right: 1rem;
+            font-family: var(--font-heading); font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase;
+            padding: 0.35rem 0.7rem; border-radius: 999px; font-weight: 700;
+        }
+        .subj-card .badge-mini.available { background: var(--accent-yellow); color: var(--accent-deep); }
+        .subj-card .badge-mini.completed { background: rgba(6,214,160,0.18); color: #04A77D; }
+        .subj-card h3 {
+            font-family: var(--font-heading); font-weight: 700; font-size: 1.2rem;
+            color: var(--accent-deep); letter-spacing: -0.01em; margin: 0;
+        }
+        .subj-card .subj-name { font-family: var(--font-heading); font-size: 0.78rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-grey); }
+        .subj-card .meta-row { display: flex; gap: 1rem; color: var(--text-grey); font-size: 0.9rem; }
+        .subj-card .meta-row span { display: inline-flex; align-items: center; gap: 0.35rem; }
+        .subj-card .start-btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 0.6rem;
+            padding: 0.85rem 1rem; border-radius: 14px;
+            background: var(--accent-deep); color: white;
+            font-family: var(--font-heading); font-weight: 600; font-size: 0.95rem;
+            border: none; cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .subj-card .start-btn:hover { background: var(--secondary-color); }
+        .subj-card .start-btn.disabled { background: rgba(14,42,71,0.08); color: var(--text-grey); cursor: not-allowed; }
+        .empty-msg { color: var(--text-grey); padding: 1.5rem; background: white; border-radius: 24px; border: 1px solid rgba(14,42,71,0.08); }
+
+        /* Results table */
+        .result-card {
+            background: white; border-radius: 28px;
+            border: 1px solid rgba(14,42,71,0.08);
             overflow: hidden;
         }
-        .subject-card:hover {
-            transform: translateY(-5px);
-            box-shadow: var(--shadow-lg);
+        .result-card table { width: 100%; border-collapse: collapse; }
+        .result-card th {
+            background: var(--accent-cream);
+            font-family: var(--font-heading); font-size: 0.72rem; letter-spacing: 0.16em;
+            text-transform: uppercase; color: var(--accent-deep); font-weight: 700;
+            padding: 1.1rem 1.4rem; text-align: left; border-bottom: 1px solid rgba(14,42,71,0.08);
         }
-        .subject-card.completed {
-            opacity: 0.8;
-            background: #F9FAFB;
+        .result-card td {
+            padding: 1.1rem 1.4rem;
+            border-bottom: 1px solid rgba(14,42,71,0.06);
+            font-family: var(--font-family); color: var(--accent-deep); font-size: 0.95rem;
         }
-        .card-header {
-            border-bottom: 1px solid #E5E7EB;
-            padding-bottom: 1rem;
-            margin-bottom: 1rem;
-        }
-        .card-header h3 {
-            margin-bottom: 0.25rem;
-        }
-        .card-meta {
-            display: flex;
-            gap: 1rem;
-            color: var(--text-grey);
-            font-size: 0.875rem;
-            margin-bottom: 1.5rem;
-        }
-        .card-meta span {
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-        }
-        .status-badge {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
+        .result-card tr:last-child td { border-bottom: none; }
+        .result-card tr:hover td { background: var(--accent-cream); }
+        .badge-pill {
+            display: inline-block; padding: 0.25rem 0.7rem; border-radius: 999px;
+            font-family: var(--font-heading); font-size: 0.72rem; letter-spacing: 0.1em;
+            text-transform: uppercase; font-weight: 700;
+            background: rgba(6,214,160,0.18); color: #04A77D;
         }
     </style>
 </head>
 <body>
-    <header class="dashboard-header">
-        <div class="container header-content">
-            <div class="profile-info">
-                <img src="media/logo.png" alt="IQ BABA Logo" style="height: 50px; margin-bottom: 0.5rem;">
-                <h2 id="studentWelcome">Welcome, Student!</h2>
-                <p id="studentMeta" class="text-grey">Track your progress and excel in your exams.</p>
-            </div>
-            <div class="actions">
-                <a href="student-register.html" class="btn btn-outline" style="padding: 0.5rem 1.25rem; font-size: 0.9rem; margin-right: 0.5rem;">Edit Profile</a>
-                <a href="javascript:void(0)" onclick="window.handleLogout()" class="btn btn-secondary" style="padding: 0.5rem 1.25rem; font-size: 0.9rem;">Logout</a>
+
+    <header class="dash-nav">
+        <div class="dash-nav-inner">
+            <a href="student-dashboard.html" class="dash-brand">
+                <img src="media/logo.png" alt="IQ Baba">
+                <span>IQ Baba</span>
+            </a>
+            <div class="dash-actions">
+                <a href="student-register.html" class="pill-btn">Edit profile</a>
+                <a href="javascript:void(0)" onclick="window.handleLogout()" class="pill-btn solid">Logout</a>
             </div>
         </div>
     </header>
 
-    <main class="container min-h-screen">
-        <h3 class="mb-3">My Subjects</h3>
-        
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4" id="subjectsGrid">
-            <!-- Populated via JS -->
+    <section class="dash-hero">
+        <div class="dash-greeting">
+            <span class="eyebrow">Welcome back</span>
+            <h1 id="studentWelcome">Welcome, <em>champion.</em></h1>
+            <p id="studentMeta">Track your progress, conquer Olympiads, and keep your streak alive.</p>
+            <div class="dash-meta-row">
+                <div class="pair"><span class="num">14</span><span class="lbl">Day streak</span></div>
+                <div class="pair"><span class="num">#247</span><span class="lbl">National rank</span></div>
+                <div class="pair"><span class="num">+12</span><span class="lbl">XP today</span></div>
+            </div>
         </div>
 
-        <h3 class="mt-4 mb-3">Completed Exams</h3>
-        <div class="glass-card mb-4" style="padding: 0;">
-            <div class="table-container">
+        <div class="dash-side-card">
+            <div>
+                <span class="label">Daily activity</span>
+                <h3>Your last two weeks</h3>
+                <p style="margin: 0; font-size: 0.92rem; color: var(--text-grey);">Each block is a day you practised. Keep filling them up.</p>
+            </div>
+            <div class="streak-grid">
+                <div class="l3"></div><div class="l2"></div><div class="l4"></div><div class="l1"></div><div></div><div class="l3"></div><div class="l4"></div>
+                <div class="l2"></div><div class="l3"></div><div class="l4"></div><div class="l4"></div><div class="l3"></div><div class="l2"></div><div class="l1"></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="sec">
+        <div class="sec-head">
+            <h2>My <em>Olympiads</em></h2>
+            <span class="meta">Tap to start · timed practice</span>
+        </div>
+        <div class="subj-grid" id="subjectsGrid"></div>
+    </section>
+
+    <section class="sec">
+        <div class="sec-head">
+            <h2>Completed <em>Exams</em></h2>
+            <span class="meta">Past attempts &amp; scores</span>
+        </div>
+        <div class="result-card">
+            <div style="overflow-x: auto;">
                 <table id="completedExamsTable">
                     <thead>
                         <tr>
@@ -99,13 +230,11 @@
                             <th>Status</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <!-- Populated via JS -->
-                    </tbody>
+                    <tbody></tbody>
                 </table>
             </div>
         </div>
-    </main>
+    </section>
 
     <script src="js/app.js"></script>
     <script src="js/api.js"></script>
@@ -118,71 +247,55 @@
 
             const subjectsGrid = document.getElementById('subjectsGrid');
             const completedExamsTable = document.querySelector('#completedExamsTable tbody');
-            
+
             try {
                 const data = await window.api.getStudentDashboard();
-                
-                // Clear loading state
+
                 subjectsGrid.innerHTML = '';
                 completedExamsTable.innerHTML = '';
 
-                // Map past results for easy checking
                 const completedExamsMap = {};
-                data.pastResults.forEach(r => {
-                    completedExamsMap[r.exam_title] = r;
-                });
+                data.pastResults.forEach(r => { completedExamsMap[r.exam_title] = r; });
 
                 if (data.upcomingExams.length === 0 && data.pastResults.length === 0) {
-                    subjectsGrid.innerHTML = '<p class="text-grey col-span-3">No exams assigned to your enrolled subjects currently.</p>';
+                    subjectsGrid.innerHTML = '<p class="empty-msg">No exams assigned to your enrolled subjects yet. Check back soon — your school will publish upcoming Olympiads here.</p>';
                 }
 
-                // Render Upcoming/Available Exams
                 data.upcomingExams.forEach(exam => {
-                    const isCompleted = completedExamsMap[exam.title] ? true : false;
-                    
+                    const isCompleted = !!completedExamsMap[exam.title];
                     const card = document.createElement('div');
-                    card.className = `glass-card subject-card ${isCompleted ? 'completed' : ''}`;
-                    
+                    card.className = `subj-card ${isCompleted ? 'completed' : ''}`;
                     card.innerHTML = `
-                        <div class="status-badge badge ${isCompleted ? 'badge-success' : 'badge-warning'}">
-                            ${isCompleted ? 'Completed' : 'Available'}
+                        <span class="badge-mini ${isCompleted ? 'completed' : 'available'}">${isCompleted ? '✓ Completed' : '🟡 Available'}</span>
+                        <span class="subj-name">${exam.subject_name}</span>
+                        <h3>${exam.title}</h3>
+                        <div class="meta-row">
+                            <span>⏱ ${exam.duration_minutes} mins</span>
+                            <span>📝 timed practice</span>
                         </div>
-                        <div class="card-header mt-2">
-                            <h3>${exam.title}</h3>
-                            <p class="text-xs text-grey m-0">${exam.subject_name}</p>
-                        </div>
-                        <div class="card-meta">
-                            <span>
-                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                ${exam.duration_minutes} mins
-                            </span>
-                        </div>
-                        ${isCompleted ? 
-                            `<button class="btn btn-outline btn-block" disabled>Exam Completed</button>` : 
-                            `<button class="btn btn-primary btn-block" onclick="startExam('${exam.id}')">Start Exam</button>`
-                        }
+                        ${isCompleted
+                            ? '<button class="start-btn disabled" disabled>Exam completed</button>'
+                            : `<button class="start-btn" onclick="startExam('${exam.id}')">Start exam →</button>`}
                     `;
-                    
                     subjectsGrid.appendChild(card);
                 });
-                
-                // Render Past Results
+
                 if (data.pastResults.length === 0) {
-                    completedExamsTable.innerHTML = '<tr><td colspan="4" class="text-center text-grey">No completed exams yet.</td></tr>';
+                    completedExamsTable.innerHTML = '<tr><td colspan="4" style="text-align:center; color: var(--text-grey);">No completed exams yet.</td></tr>';
                 } else {
                     data.pastResults.forEach(result => {
                         const tr = document.createElement('tr');
                         tr.innerHTML = `
-                            <td class="font-bold">${result.exam_title}</td>
+                            <td style="font-weight: 700;">${result.exam_title}</td>
                             <td>${new Date(result.date_taken).toLocaleDateString()}</td>
-                            <td>${result.percentage}%</td>
-                            <td><span class="badge badge-success">Submitted</span></td>
+                            <td style="font-weight: 700; color: var(--secondary-color);">${result.percentage}%</td>
+                            <td><span class="badge-pill">Submitted</span></td>
                         `;
                         completedExamsTable.appendChild(tr);
                     });
                 }
             } catch (error) {
-                console.error("Failed to load dashboard data", error);
+                console.error('Failed to load dashboard data', error);
             }
         });
 
