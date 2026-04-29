@@ -3,215 +3,285 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>School Portal Login | IQ Baba</title>
+    <title>School Portal | IQ Baba</title>
+    <link rel="icon" href="media/logo.png">
     <link rel="stylesheet" href="css/styles.css">
     <style>
-        body {
-            background: #0f172a;
-            color: white;
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
+        body { background: var(--bg-main); cursor: none; overflow: hidden; }
+        @media (max-width: 1024px) { body { cursor: auto; overflow: auto; } }
+
+        .auth-shell { min-height: 100vh; display: grid; grid-template-columns: 1fr 1.05fr; }
+        @media (max-width: 980px) { .auth-shell { grid-template-columns: 1fr; min-height: auto; } }
+
+        /* LEFT — form */
+        .auth-main {
+            position: relative; padding: 2rem; display: flex; align-items: center; justify-content: center;
+            background: var(--bg-main);
+            overflow-y: auto;
+        }
+        .auth-back {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            font-family: var(--font-heading); font-weight: 600;
+            color: var(--text-grey); font-size: 0.9rem;
+            position: absolute; top: 2rem; left: 2rem;
+        }
+        .auth-back:hover { color: var(--accent-deep); }
+        .auth-card {
+            width: 100%; max-width: 460px;
+            display: flex; flex-direction: column; gap: 1.4rem;
+        }
+        .auth-card .brand {
+            display: flex; align-items: center; gap: 0.7rem; margin-bottom: 1.2rem;
+        }
+        .auth-card .brand img { height: 40px; }
+        .auth-card .brand span { font-family: var(--font-heading); font-weight: 800; color: var(--accent-deep); letter-spacing: -0.02em; font-size: 1.05rem; }
+        .auth-card h2 {
+            font-family: var(--font-heading); font-weight: 800;
+            font-size: clamp(2rem, 3.6vw, 2.8rem); line-height: 1.05;
+            letter-spacing: -0.03em; color: var(--accent-deep);
+        }
+        .auth-card h2 em { font-family: var(--font-serif); font-style: italic; font-weight: 400; color: var(--secondary-color); }
+        .auth-card p.sub { color: var(--text-grey); font-size: 1.02rem; }
+
+        .field { display: flex; flex-direction: column; gap: 0.5rem; }
+        .field label {
+            font-family: var(--font-heading); font-size: 0.72rem;
+            letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent-deep); font-weight: 600;
+        }
+        .input {
+            width: 100%; padding: 1.1rem 1.2rem; font-size: 1rem;
+            background: white; border: 1.5px solid rgba(14,42,71,0.12);
+            border-radius: 16px; color: var(--accent-deep);
+            font-family: var(--font-family);
+            transition: all 0.25s ease;
+        }
+        .input::placeholder { color: var(--text-light); }
+        .input:focus {
+            outline: none; border-color: var(--accent-deep);
+            box-shadow: 0 0 0 4px rgba(14,42,71,0.08);
         }
 
-        .login-wrapper {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
+        .remember-row { display: flex; align-items: center; gap: 0.6rem; font-family: var(--font-heading); font-size: 0.88rem; color: var(--text-grey); }
+        .remember-row input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent-deep); }
+
+        .submit-btn {
+            display: inline-flex; justify-content: center; align-items: center; gap: 0.6rem;
+            background: var(--accent-deep); color: white;
+            border: none; cursor: pointer;
+            padding: 1.1rem; border-radius: 999px;
+            font-family: var(--font-heading); font-weight: 600; font-size: 1rem;
+            transition: background 0.3s ease, transform 0.3s cubic-bezier(0.16,1,0.3,1);
+        }
+        .submit-btn:hover { background: var(--secondary-color); }
+        .submit-btn .arrow {
+            width: 26px; height: 26px; border-radius: 50%;
+            background: var(--secondary-color); color: white;
+            display: inline-flex; align-items: center; justify-content: center;
+            transition: transform 0.4s cubic-bezier(0.16,1,0.3,1), background 0.3s ease;
+        }
+        .submit-btn:hover .arrow { background: white; color: var(--accent-deep); transform: rotate(-45deg); }
+        .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .alt-action {
+            text-align: center; font-size: 0.95rem; color: var(--text-grey);
+            font-family: var(--font-heading);
+            padding-top: 1rem; border-top: 1px dashed rgba(14,42,71,0.15);
+        }
+        .alt-action a { color: var(--accent-deep); font-weight: 700; }
+        .alt-action a:hover { color: var(--secondary-color); }
+
+        /* RIGHT — institutional showcase */
+        .auth-aside {
+            position: relative; overflow: hidden;
+            padding: 3rem;
+            display: flex; flex-direction: column; justify-content: space-between;
+            background: var(--accent-deep); color: white;
+            isolation: isolate;
+        }
+        .auth-aside::before {
+            content: ""; position: absolute; bottom: -180px; left: -120px;
+            width: 480px; height: 480px; border-radius: 50%;
+            background: radial-gradient(circle, var(--secondary-color) 0%, transparent 65%);
+            opacity: 0.55; z-index: -1;
+        }
+        .auth-aside::after {
+            content: ""; position: absolute; top: -160px; right: -160px;
+            width: 480px; height: 480px; border-radius: 50%;
+            background: radial-gradient(circle, var(--primary-color) 0%, transparent 65%);
+            opacity: 0.45; z-index: -1;
         }
 
-        .login-bg-shapes {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            z-index: 0;
+        .aside-eyebrow {
+            display: inline-flex; align-items: center; gap: 0.6rem;
+            font-family: var(--font-heading); font-size: 0.72rem; letter-spacing: 0.18em;
+            text-transform: uppercase; font-weight: 600; color: var(--accent-yellow);
+        }
+        .aside-eyebrow::before { content: ""; width: 24px; height: 1.5px; background: var(--accent-yellow); display: inline-block; }
+
+        .aside-mid { max-width: 32ch; padding: 2rem 0; }
+        .aside-mid h1 {
+            font-family: var(--font-heading); font-weight: 800;
+            font-size: clamp(2.6rem, 5vw, 4.4rem);
+            line-height: 0.95; letter-spacing: -0.04em;
+            color: white; margin-top: 1.2rem;
+        }
+        .aside-mid h1 em { font-family: var(--font-serif); font-style: italic; font-weight: 400; color: var(--accent-yellow); }
+        .aside-mid p { color: rgba(255,255,255,0.72); margin-top: 1.2rem; font-size: 1.05rem; line-height: 1.55; }
+
+        .aside-features { display: flex; flex-direction: column; gap: 0.85rem; margin-top: 1.6rem; }
+        .aside-features .row { display: flex; align-items: center; gap: 0.85rem; font-family: var(--font-heading); font-weight: 500; font-size: 0.98rem; color: rgba(255,255,255,0.92); }
+        .aside-features .tick {
+            width: 26px; height: 26px; flex: none; border-radius: 50%;
+            display: inline-flex; align-items: center; justify-content: center;
+            background: var(--accent-yellow); color: var(--accent-deep); font-weight: 800;
         }
 
-        .shape {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(80px);
-            opacity: 0.4;
+        .aside-bottom {
+            display: flex; gap: 2.5rem; flex-wrap: wrap;
+            padding-top: 1.6rem; border-top: 1px solid rgba(255,255,255,0.12);
         }
+        .aside-bottom .pair { display: flex; flex-direction: column; gap: 0.2rem; }
+        .aside-bottom .num { font-family: var(--font-heading); font-weight: 800; font-size: 1.8rem; letter-spacing: -0.03em; color: white; }
+        .aside-bottom .lbl { font-family: var(--font-heading); font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(255,255,255,0.55); }
 
-        .shape-1 {
-            width: 400px;
-            height: 400px;
-            background: var(--primary-color);
-            top: -100px;
-            left: -100px;
-            animation: float 10s infinite alternate;
-        }
-
-        .shape-2 {
-            width: 300px;
-            height: 300px;
-            background: var(--accent-blue);
-            bottom: -50px;
-            right: -50px;
-            animation: float-delayed 12s infinite alternate;
-        }
-
-        .login-card-v2 {
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(30px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 32px;
-            padding: 4rem 3rem;
-            width: 100%;
-            max-width: 480px;
-            z-index: 10;
-            box-shadow: 0 40px 100px rgba(0,0,0,0.5);
-            animation: slideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-
-        .login-header {
-            text-align: center;
-            margin-bottom: 3rem;
-        }
-
-        .login-header h1 {
-            color: white;
-            font-size: 2.5rem;
-            letter-spacing: -0.03em;
-            margin-bottom: 0.5rem;
-        }
-
-        .login-header p {
-            color: #94a3b8;
-            font-size: 1.1rem;
-        }
-
-        .form-label {
-            color: #94a3b8;
-            font-weight: 500;
-            margin-bottom: 0.75rem;
-        }
-
-        .form-control-v2 {
-            background: rgba(30, 41, 59, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: white;
-            padding: 1.25rem 1.5rem;
-            border-radius: 16px;
-            width: 100%;
-            font-size: 1rem;
-            transition: all 0.3s;
-        }
-
-        .form-control-v2:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            background: rgba(30, 41, 59, 0.8);
-            box-shadow: 0 0 0 4px rgba(59, 113, 159, 0.2);
-        }
-
-        .btn-premium {
-            background: var(--primary-color);
-            color: white;
-            padding: 1.25rem;
-            border-radius: 16px;
-            font-weight: 700;
-            width: 100%;
-            font-size: 1.1rem;
-            margin-top: 1.5rem;
-            box-shadow: 0 10px 20px rgba(59, 113, 159, 0.3);
-        }
-
-        .btn-premium:hover {
-            background: var(--primary-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 15px 30px rgba(59, 113, 159, 0.4);
-        }
-
-        .back-link {
-            display: block;
-            text-align: center;
-            margin-top: 2.5rem;
-            color: #64748b;
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-
-        .back-link:hover {
-            color: white;
-        }
-
-        @keyframes float {
-            from { transform: translate(0, 0); }
-            to { transform: translate(30px, 50px); }
-        }
-
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        .err-msg {
+            display: none; padding: 0.9rem 1rem; border-radius: 14px;
+            background: #FEEBEF; color: #B91C3C; font-size: 0.92rem;
+            border: 1px solid rgba(185, 28, 60, 0.2);
         }
     </style>
 </head>
 <body>
-    <div class="login-wrapper">
-        <div class="login-bg-shapes">
-            <div class="shape shape-1"></div>
-            <div class="shape shape-2"></div>
-        </div>
-        
-        <div class="login-card-v2">
-            <div class="login-header">
-                <img src="media/logo.png" alt="IQ BABA Logo" style="height: 100px; margin-bottom: 1.5rem;">
-                <p>School Portal Administration</p>
+
+    <div class="cursor-ring" id="cursorRing"></div>
+    <div class="cursor-dot" id="cursorDot"></div>
+
+    <div class="auth-shell">
+        <!-- LEFT — form -->
+        <main class="auth-main">
+            <a href="index.html" class="auth-back" data-magnet>← Back to home</a>
+
+            <div class="auth-card">
+                <div class="brand">
+                    <img src="media/logo.png" alt="IQ Baba">
+                    <span>IQ Baba · School Portal</span>
+                </div>
+
+                <span class="eyebrow">For administrators &amp; faculty</span>
+                <h2>Welcome to your<br><em>school cockpit.</em></h2>
+                <p class="sub">Manage classes, monitor results and run school-wide Olympiads from one calm dashboard.</p>
+
+                <form id="schoolLoginForm" style="display: flex; flex-direction: column; gap: 1.1rem;">
+                    <div id="error-msg" class="err-msg"></div>
+
+                    <div class="field">
+                        <label for="username">Institutional Email</label>
+                        <input type="email" id="username" name="username" class="input" placeholder="admin@school.edu" required>
+                    </div>
+
+                    <div class="field">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" class="input" placeholder="••••••••" required>
+                    </div>
+
+                    <label class="remember-row">
+                        <input type="checkbox" id="rememberMe" name="rememberMe">
+                        <span>Remember this session on this device</span>
+                    </label>
+
+                    <button type="submit" class="submit-btn" data-magnet>
+                        Enter portal
+                        <span class="arrow">→</span>
+                    </button>
+                </form>
+
+                <div class="alt-action">
+                    Want to onboard your school? <a href="mailto:hello@iqbaba.com">Talk to us →</a>
+                </div>
             </div>
-            
-            <form id="schoolLoginForm">
-                <div class="form-group">
-                    <label class="form-label" for="username">Institutional Email</label>
-                    <input type="email" id="username" name="username" class="form-control-v2" placeholder="admin@school.edu" required>
+        </main>
+
+        <!-- RIGHT — visual -->
+        <aside class="auth-aside">
+            <span class="aside-eyebrow">Trusted by 1,200+ schools</span>
+
+            <div class="aside-mid">
+                <h1>Run a smarter<br><em>academic</em> year.</h1>
+                <p>Class heatmaps, Olympiad scheduling, parent digests and faculty tools — already used by leading schools across India.</p>
+                <div class="aside-features">
+                    <div class="row"><span class="tick">✓</span> Class &amp; subject-level heatmaps</div>
+                    <div class="row"><span class="tick">✓</span> Mock Olympiads, scheduled in clicks</div>
+                    <div class="row"><span class="tick">✓</span> Calm parent digests, automated</div>
+                    <div class="row"><span class="tick">✓</span> Faculty leaderboards &amp; recognitions</div>
                 </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="password">Password</label>
-                    <input type="password" id="password" name="password" class="form-control-v2" placeholder="••••••••" required>
-                </div>
-                
-                <div class="flex items-center gap-2 mb-6">
-                    <input type="checkbox" id="rememberMe" name="rememberMe">
-                    <label for="rememberMe" style="color: #64748b; font-size: 0.9rem; cursor: pointer;">Remember this session</label>
-                </div>
-                
-                <button type="submit" class="btn btn-premium btn-glow">Enter Portal</button>
-            </form>
-            
-            <a href="index.html" class="back-link">
-                &larr; Return to Landing Page
-            </a>
-        </div>
+            </div>
+
+            <div class="aside-bottom">
+                <div class="pair"><span class="num">1.2K+</span><span class="lbl">Partner schools</span></div>
+                <div class="pair"><span class="num">50K+</span><span class="lbl">Active students</span></div>
+                <div class="pair"><span class="num">24 hr</span><span class="lbl">Avg. support</span></div>
+            </div>
+        </aside>
     </div>
 
     <script src="js/app.js"></script>
     <script src="js/api.js"></script>
     <script>
-        document.getElementById('schoolLoginForm').addEventListener('submit', async function(e) {
+        // Custom cursor
+        (function () {
+            const dot = document.getElementById('cursorDot');
+            const ring = document.getElementById('cursorRing');
+            const supports = window.matchMedia('(min-width: 1025px)').matches && window.matchMedia('(pointer: fine)').matches;
+            if (!supports) { dot.style.display = 'none'; ring.style.display = 'none'; return; }
+            let mx = 0, my = 0, rx = 0, ry = 0;
+            window.addEventListener('mousemove', (e) => {
+                mx = e.clientX; my = e.clientY;
+                dot.style.transform = `translate(${mx}px, ${my}px) translate(-50%, -50%)`;
+            });
+            (function tick() {
+                rx += (mx - rx) * 0.18; ry += (my - ry) * 0.18;
+                ring.style.transform = `translate(${rx}px, ${ry}px) translate(-50%, -50%)`;
+                requestAnimationFrame(tick);
+            })();
+            document.querySelectorAll('a, button, input, [data-magnet]').forEach(el => {
+                el.addEventListener('mouseenter', () => ring.classList.add('active'));
+                el.addEventListener('mouseleave', () => ring.classList.remove('active'));
+            });
+            document.querySelectorAll('[data-magnet]').forEach(btn => {
+                btn.addEventListener('mousemove', (e) => {
+                    const r = btn.getBoundingClientRect();
+                    const x = (e.clientX - r.left - r.width / 2) * 0.18;
+                    const y = (e.clientY - r.top - r.height / 2) * 0.18;
+                    btn.style.transform = `translate(${x}px, ${y}px)`;
+                });
+                btn.addEventListener('mouseleave', () => { btn.style.transform = 'translate(0,0)'; });
+            });
+        })();
+
+        // Login handler
+        document.getElementById('schoolLoginForm').addEventListener('submit', async function (e) {
             e.preventDefault();
             const formData = window.serializeForm(this);
+            const errorMsg = document.getElementById('error-msg');
             const submitBtn = this.querySelector('button[type="submit"]');
-            
+
+            errorMsg.style.display = 'none';
+
             try {
                 submitBtn.disabled = true;
-                submitBtn.textContent = 'Authenticating...';
-                
+                submitBtn.innerHTML = 'Authenticating… <span class="arrow">⏳</span>';
+
                 await window.api.login(formData.username, formData.password, 'school');
-                
-                window.showNotification('Welcome back. Access granted.', 'success');
-                
-                setTimeout(() => {
-                    window.location.href = 'school-dashboard.html';
-                }, 800);
+                if (window.showNotification) window.showNotification('Welcome back. Access granted.', 'success');
+
+                setTimeout(() => { window.location.href = 'school-dashboard.html'; }, 600);
             } catch (error) {
-                window.showNotification(error.message || 'Access Denied: Invalid Institutional Credentials.', 'danger');
+                const msg = error.message || 'Access denied: invalid institutional credentials.';
+                if (window.showNotification) window.showNotification(msg, 'danger');
+                errorMsg.textContent = msg;
+                errorMsg.style.display = 'block';
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Enter Portal';
+                submitBtn.innerHTML = 'Enter portal <span class="arrow">→</span>';
             }
         });
     </script>
