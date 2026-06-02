@@ -3,101 +3,302 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Management - School Portal</title>
+    <title>Students | School Portal</title>
+    <link rel="icon" href="media/logo.png">
     <link rel="stylesheet" href="css/styles.css">
     <style>
-        .admin-layout { display: flex; min-height: 100vh; background-color: #F8F9FA; }
-        .sidebar { width: 260px; background-color: #0f172a; color: white; flex-shrink: 0; display: flex; flex-direction: column; }
-        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid #1e293b; display: flex; align-items: center; gap: 0.75rem; }
-        .sidebar-header h2 { color: white; font-size: 1.25rem; margin: 0; font-family: var(--font-heading); }
-        .nav-menu { padding: 1rem 0; flex-grow: 1; }
-        .nav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.5rem; color: #94a3b8; text-decoration: none; font-weight: 500; }
-        .nav-item:hover { background-color: #1e293b; color: white; }
-        .nav-item.active { background-color: var(--accent-blue); color: white; border-left: 4px solid #FFF; }
-        .nav-icon { width: 20px; height: 20px; }
-        .main-content { flex-grow: 1; display: flex; flex-direction: column; overflow-x: hidden; }
-        .top-header { background-color: white; height: 64px; padding: 0 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-sm); }
-        .content-area { padding: 2rem; overflow-y: auto; }
-        
-        /* Modal Styles */
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity var(--transition-fast); }
+        body { background: var(--bg-main); }
+        .admin-layout { display: flex; min-height: 100vh; }
+
+        /* Sidebar — shared with school-dashboard */
+        .sidebar {
+            width: 260px; flex-shrink: 0;
+            background: var(--accent-deep); color: white;
+            display: flex; flex-direction: column;
+            position: sticky; top: 0; height: 100vh;
+        }
+        .sidebar-header { padding: 1.6rem 1.5rem; display: flex; align-items: center; gap: 0.7rem; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .sidebar-header img { height: 36px; }
+        .sidebar-header span { font-family: var(--font-heading); font-weight: 800; color: white; letter-spacing: -0.02em; font-size: 1.05rem; }
+
+        .nav-menu { padding: 1.2rem 0.75rem; flex: 1; display: flex; flex-direction: column; gap: 0.25rem; }
+        .nav-item {
+            display: flex; align-items: center; gap: 0.85rem;
+            padding: 0.8rem 1rem; border-radius: 14px;
+            color: rgba(255,255,255,0.65); text-decoration: none;
+            font-family: var(--font-heading); font-weight: 500; font-size: 0.95rem;
+            transition: all 0.25s ease;
+        }
+        .nav-item:hover { background: rgba(255,255,255,0.06); color: white; }
+        .nav-item.active { background: rgba(255,153,51,0.16); color: white; position: relative; }
+        .nav-item.active::before {
+            content: ""; position: absolute; left: -0.75rem; top: 50%; transform: translateY(-50%);
+            width: 4px; height: 22px; border-radius: 0 4px 4px 0; background: var(--secondary-color);
+        }
+        .nav-icon { width: 20px; height: 20px; flex: none; }
+        .nav-footer { padding: 1rem 0.75rem 1.5rem; border-top: 1px solid rgba(255,255,255,0.08); }
+
+        .main-content { flex: 1; min-width: 0; }
+        .top-header {
+            background: rgba(250, 244, 236, 0.85);
+            backdrop-filter: blur(20px) saturate(140%);
+            -webkit-backdrop-filter: blur(20px) saturate(140%);
+            border-bottom: 1px solid rgba(14,42,71,0.08);
+            position: sticky; top: 0; z-index: 50;
+            padding: 1rem 2rem;
+            display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+        }
+        .top-header .title { font-family: var(--font-heading); font-weight: 800; color: var(--accent-deep); font-size: 1.15rem; letter-spacing: -0.02em; margin: 0; }
+        .role-chip {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.45rem 0.9rem; border-radius: 999px;
+            font-family: var(--font-heading); font-size: 0.78rem; font-weight: 600;
+            background: var(--accent-deep); color: var(--accent-yellow);
+        }
+        .role-chip .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-yellow); display: inline-block; }
+        .content-area { padding: 2rem; }
+
+        /* Page hero */
+        .page-hero {
+            background: var(--accent-deep); color: white; border-radius: 28px;
+            padding: 2.2rem; margin-bottom: 1.5rem;
+            position: relative; overflow: hidden; isolation: isolate;
+        }
+        .page-hero::before {
+            content: ""; position: absolute; bottom: -160px; right: -80px;
+            width: 360px; height: 360px; border-radius: 50%;
+            background: radial-gradient(circle, var(--secondary-color) 0%, transparent 65%);
+            opacity: 0.5; z-index: -1;
+        }
+        .page-hero h1 {
+            font-family: var(--font-heading); font-weight: 800;
+            font-size: clamp(1.8rem, 3.4vw, 2.6rem); line-height: 1.05;
+            letter-spacing: -0.025em; color: white; margin: 0.6rem 0 0.5rem;
+        }
+        .page-hero h1 em { font-family: var(--font-serif); font-style: italic; font-weight: 400; color: var(--accent-yellow); }
+        .page-hero p { color: rgba(255,255,255,0.72); margin: 0; max-width: 50ch; }
+        .page-hero .eyebrow { color: var(--accent-yellow); }
+        .page-hero .eyebrow::before { background: var(--accent-yellow); }
+
+        /* Toolbar + table card */
+        .panel {
+            background: white; border-radius: 28px;
+            border: 1px solid rgba(14,42,71,0.08);
+            overflow: hidden;
+        }
+        .toolbar {
+            display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+            padding: 1.2rem 1.5rem;
+            border-bottom: 1px solid rgba(14,42,71,0.08);
+            flex-wrap: wrap;
+        }
+        .search-box {
+            display: flex; align-items: center; gap: 0.55rem;
+            background: var(--accent-cream); border: 1.5px solid transparent;
+            padding: 0.65rem 1rem; border-radius: 999px;
+            min-width: 280px;
+            transition: all 0.25s ease;
+        }
+        .search-box:focus-within { background: white; border-color: var(--accent-deep); }
+        .search-box input { border: none; outline: none; background: transparent; flex: 1; font-family: var(--font-family); color: var(--accent-deep); }
+        .search-box input::placeholder { color: var(--text-light); }
+
+        .actions-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .pill-btn {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.6rem 1rem; border-radius: 999px;
+            font-family: var(--font-heading); font-weight: 600; font-size: 0.88rem;
+            border: 1.5px solid rgba(14,42,71,0.15);
+            color: var(--accent-deep); background: white;
+            cursor: pointer; transition: all 0.25s ease;
+        }
+        .pill-btn:hover { border-color: var(--accent-deep); background: var(--accent-deep); color: white; }
+        .pill-btn.solid { background: var(--accent-deep); color: white; border-color: var(--accent-deep); }
+        .pill-btn.solid:hover { background: var(--secondary-color); border-color: var(--secondary-color); }
+
+        /* Table */
+        .panel-table { width: 100%; }
+        .panel-table table { width: 100%; border-collapse: collapse; }
+        .panel-table th {
+            background: var(--accent-cream);
+            font-family: var(--font-heading); font-size: 0.7rem; letter-spacing: 0.14em;
+            text-transform: uppercase; color: var(--accent-deep); font-weight: 700;
+            padding: 0.95rem 1.5rem; text-align: left;
+        }
+        .panel-table td {
+            padding: 1.1rem 1.5rem; border-top: 1px solid rgba(14,42,71,0.06);
+            font-size: 0.93rem; color: var(--accent-deep);
+        }
+        .panel-table tr:hover td { background: var(--accent-cream); }
+
+        .badge-pill {
+            display: inline-block; padding: 0.25rem 0.7rem; border-radius: 999px;
+            font-family: var(--font-heading); font-size: 0.7rem; letter-spacing: 0.1em;
+            text-transform: uppercase; font-weight: 700;
+            background: rgba(6,214,160,0.18); color: #04A77D;
+        }
+        .row-actions { display: flex; gap: 0.4rem; }
+        .icon-btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 32px; height: 32px; border-radius: 10px;
+            background: var(--accent-cream); color: var(--accent-deep);
+            border: none; cursor: pointer; font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+        .icon-btn:hover { background: var(--accent-deep); color: white; }
+        .icon-btn.danger:hover { background: #B91C3C; }
+
+        .pagination-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1rem 1.5rem; gap: 1rem; flex-wrap: wrap;
+            border-top: 1px solid rgba(14,42,71,0.06);
+            font-family: var(--font-heading); font-size: 0.85rem; color: var(--text-grey);
+        }
+        .pager { display: flex; gap: 0.3rem; }
+        .pager button {
+            min-width: 32px; height: 32px; border-radius: 10px;
+            border: 1px solid rgba(14,42,71,0.12); background: white;
+            font-family: var(--font-heading); font-weight: 600; color: var(--accent-deep);
+            cursor: pointer; padding: 0 0.6rem;
+            transition: all 0.2s ease;
+        }
+        .pager button.active { background: var(--accent-deep); color: white; border-color: var(--accent-deep); }
+        .pager button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(14, 42, 71, 0.55);
+            backdrop-filter: blur(6px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 1000; opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
-        .modal-card { background: white; padding: 2rem; border-radius: var(--border-radius-md); max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; transform: translateY(20px); transition: transform var(--transition-fast); }
-        .modal-overlay.active .modal-card { transform: translateY(0); }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid #E5E7EB; padding-bottom: 1rem; }
-        .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #6B7280; }
-        
-        /* Table Controls */
-        .table-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem; }
-        .search-box { display: flex; align-items: center; background: white; border: 1px solid #E5E7EB; border-radius: var(--border-radius-md); padding: 0.5rem 1rem; width: 300px; }
-        .search-box input { border: none; outline: none; width: 100%; margin-left: 0.5rem; }
+        .modal-card {
+            background: white; padding: 2.2rem;
+            border-radius: 28px;
+            max-width: 640px; width: calc(100% - 2rem);
+            max-height: 90vh; overflow-y: auto;
+            transform: translateY(20px) scale(0.96);
+            transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
+            border: 1px solid rgba(14,42,71,0.08);
+        }
+        .modal-overlay.active .modal-card { transform: translateY(0) scale(1); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .modal-header h3 { font-family: var(--font-heading); font-weight: 800; color: var(--accent-deep); font-size: 1.4rem; letter-spacing: -0.02em; margin: 0; }
+        .modal-close {
+            background: var(--accent-cream); border: none;
+            width: 36px; height: 36px; border-radius: 50%;
+            color: var(--accent-deep); cursor: pointer;
+            font-size: 1.2rem; display: inline-flex; align-items: center; justify-content: center;
+            transition: all 0.2s ease;
+        }
+        .modal-close:hover { background: var(--accent-deep); color: white; transform: rotate(90deg); }
+
+        .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        @media (max-width: 600px) { .field-grid { grid-template-columns: 1fr; } }
+        .field { display: flex; flex-direction: column; gap: 0.45rem; margin-bottom: 1rem; }
+        .field label {
+            font-family: var(--font-heading); font-size: 0.7rem;
+            letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent-deep); font-weight: 600;
+        }
+        .input, select.input {
+            width: 100%; padding: 0.95rem 1.1rem; font-size: 0.98rem;
+            background: var(--bg-main); border: 1.5px solid rgba(14,42,71,0.1);
+            border-radius: 14px; color: var(--accent-deep);
+            font-family: var(--font-family); transition: all 0.25s ease;
+        }
+        select.input {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%230E2A47' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 1rem center; background-repeat: no-repeat;
+            background-size: 1.2em; padding-right: 2.4rem;
+        }
+        .input:focus { outline: none; border-color: var(--accent-deep); background: white; box-shadow: 0 0 0 4px rgba(14,42,71,0.08); }
+        .helper { font-size: 0.8rem; color: var(--text-grey); margin-top: 0.3rem; }
+
+        .modal-footer { display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1.5rem; flex-wrap: wrap; }
+
+        .dropzone {
+            border: 2px dashed rgba(14,42,71,0.18); border-radius: 22px;
+            padding: 2.4rem 1.5rem; text-align: center;
+            background: var(--accent-cream); cursor: pointer;
+            transition: all 0.25s ease;
+        }
+        .dropzone:hover { border-color: var(--accent-deep); background: white; }
+        .dropzone .ic { font-size: 2rem; color: var(--secondary-color); margin-bottom: 0.5rem; }
+        .dropzone .t { font-family: var(--font-heading); font-weight: 700; color: var(--accent-deep); }
+        .dropzone .s { font-size: 0.85rem; color: var(--text-grey); margin-top: 0.3rem; }
+
+        @media (max-width: 820px) {
+            .admin-layout { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; position: relative; }
+            .nav-menu { flex-direction: row; overflow-x: auto; padding: 0.75rem; gap: 0.4rem; }
+            .nav-item { white-space: nowrap; }
+            .nav-item.active::before { display: none; }
+            .nav-footer { display: none; }
+        }
     </style>
 </head>
 <body>
+
     <div class="admin-layout">
-        <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <div style="width: 32px; height: 32px; background: var(--accent-blue); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                    <svg width="18" height="18" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                </div>
-                <h2>School Portal</h2>
+                <img src="media/logo-white.png" alt="IQ Baba">
+                <span>IQ Baba</span>
             </div>
             <nav class="nav-menu">
                 <a href="school-dashboard.html" class="nav-item">
                     <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-                    Dashboard Overview
+                    Overview
                 </a>
                 <a href="school-students.html" class="nav-item active">
                     <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                    Student Management
+                    Students
                 </a>
                 <a href="school-results.html" class="nav-item">
                     <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                    Results & Performance
+                    Results
                 </a>
             </nav>
-            <div style="padding: 1.5rem; border-top: 1px solid #374151;">
-                <a href="javascript:void(0)" onclick="window.handleLogout()" class="nav-item" style="padding: 0;">
+            <div class="nav-footer">
+                <a href="javascript:void(0)" onclick="window.handleLogout()" class="nav-item">
                     <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                     Logout
                 </a>
             </div>
         </aside>
 
-        <!-- Main Content -->
         <main class="main-content">
             <header class="top-header">
-                <div><h3 style="margin: 0;">Student Management</h3></div>
-                <div class="flex items-center gap-4">
-                    <span class="chip chip-blue">School Admin</span>
-                </div>
+                <h1 class="title">Student Management</h1>
+                <span class="role-chip"><span class="dot"></span> School Admin</span>
             </header>
 
             <div class="content-area">
-                <div class="glass-card" style="padding: 1.5rem;">
-                    
-                    <div class="table-controls">
+                <div class="page-hero">
+                    <span class="eyebrow">Roster</span>
+                    <h1>Every student. <em>One quiet</em> roster.</h1>
+                    <p>Add students one-by-one or bulk-upload from Excel. Search instantly, edit profiles, and export the entire roster as CSV.</p>
+                </div>
+
+                <div class="panel">
+                    <div class="toolbar">
                         <div class="search-box">
-                            <svg width="16" height="16" fill="none" stroke="#6B7280" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                            <input type="text" id="searchInput" placeholder="Search by name or username...">
+                            <svg width="16" height="16" fill="none" stroke="#0E2A47" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            <input type="text" id="searchInput" placeholder="Search by name or username…">
                         </div>
-                        <div class="flex gap-2">
-                            <button class="btn btn-outline" onclick="exportStudents()" style="border-color: var(--accent-blue); color: var(--accent-blue);">
-                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right:0.5rem;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                                Export CSV
-                            </button>
-                            <button class="btn btn-outline" onclick="openModal('bulkModal')" style="border-color: var(--accent-blue); color: var(--accent-blue);">
-                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right:0.5rem;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                                Upload Students (Excel/CSV)
-                            </button>
-                            <button class="btn" style="background: var(--accent-blue); color: white;" onclick="openModal('addStudentModal')">+ Add Student</button>
+                        <div class="actions-row">
+                            <button class="pill-btn" onclick="exportStudents()">↓ Export CSV</button>
+                            <button class="pill-btn" onclick="openModal('bulkModal')">↑ Bulk upload</button>
+                            <button class="pill-btn solid" onclick="openModal('addStudentModal')">+ Add student</button>
                         </div>
                     </div>
 
-                    <div class="table-container shadow-none" style="border: 1px solid #E5E7EB;">
+                    <div class="panel-table" style="overflow-x: auto;">
                         <table id="studentsTable">
-                            <thead style="background: #F9FAFB;">
+                            <thead>
                                 <tr>
                                     <th>Name</th>
                                     <th>Class</th>
@@ -106,20 +307,18 @@
                                     <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <!-- Populated via JS -->
-                            </tbody>
+                            <tbody></tbody>
                         </table>
                     </div>
-                    
-                    <div class="flex justify-between items-center mt-4 text-sm text-grey">
-                        <div>Showing 1 to 3 of 342 entries</div>
-                        <div class="flex gap-1">
-                            <button class="btn btn-outline" style="padding: 0.25rem 0.5rem;" disabled>&lt;</button>
-                            <button class="btn" style="background: var(--accent-blue); color: white; padding: 0.25rem 0.75rem;">1</button>
-                            <button class="btn btn-outline" style="padding: 0.25rem 0.75rem;">2</button>
-                            <button class="btn btn-outline" style="padding: 0.25rem 0.75rem;">3</button>
-                            <button class="btn btn-outline" style="padding: 0.25rem 0.5rem;">&gt;</button>
+
+                    <div class="pagination-bar">
+                        <span>Showing 1–3 of 342 students</span>
+                        <div class="pager">
+                            <button disabled>‹</button>
+                            <button class="active">1</button>
+                            <button>2</button>
+                            <button>3</button>
+                            <button>›</button>
                         </div>
                     </div>
                 </div>
@@ -131,23 +330,17 @@
     <div class="modal-overlay" id="addStudentModal">
         <div class="modal-card">
             <div class="modal-header">
-                <h3 class="mb-0">Add New Student</h3>
-                <button class="modal-close" onclick="closeModal('addStudentModal')">&times;</button>
+                <h3>Add a new student</h3>
+                <button class="modal-close" onclick="closeModal('addStudentModal')">×</button>
             </div>
             <form id="addStudentForm">
-                <div class="grid md:grid-cols-2 gap-4">
-                    <div class="form-group">
-                        <label class="form-label">Full Name *</label>
-                        <input type="text" name="fullName" class="form-control" placeholder="e.g. Rahul Sharma" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Username *</label>
-                        <input type="text" name="username" class="form-control" placeholder="e.g. rahul123" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Class *</label>
-                        <select name="studentClass" class="form-control" required>
-                            <option value="">Select Class</option>
+                <div class="field-grid">
+                    <div class="field"><label>Full name *</label><input type="text" name="fullName" class="input" placeholder="e.g. Rahul Sharma" required></div>
+                    <div class="field"><label>Username *</label><input type="text" name="username" class="input" placeholder="e.g. rahul123" required></div>
+                    <div class="field">
+                        <label>Class *</label>
+                        <select name="studentClass" class="input" required>
+                            <option value="">Select class</option>
                             <option value="6">Class 6</option>
                             <option value="7">Class 7</option>
                             <option value="8">Class 8</option>
@@ -157,28 +350,25 @@
                             <option value="12">Class 12</option>
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Board *</label>
-                        <select name="board" class="form-control" required>
-                            <option value="">Select Board</option>
+                    <div class="field">
+                        <label>Board *</label>
+                        <select name="board" class="input" required>
+                            <option value="">Select board</option>
                             <option value="CBSE">CBSE</option>
                             <option value="ICSE">ICSE</option>
                             <option value="State Board">State Board</option>
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Email</label>
-                        <input type="email" name="email" class="form-control" placeholder="rahul@example.com">
-                    </div>
+                    <div class="field" style="grid-column: span 2;"><label>Email</label><input type="email" name="email" class="input" placeholder="rahul@example.com"></div>
                 </div>
-                <div class="form-group mt-2">
-                    <label class="form-label">Password *</label>
-                    <input type="text" name="password" class="form-control" value="password123" required>
-                    <small class="text-grey">Default is password123</small>
+                <div class="field">
+                    <label>Password *</label>
+                    <input type="text" name="password" class="input" value="password123" required>
+                    <span class="helper">Default is <code style="background: var(--accent-cream); padding: 0.1rem 0.4rem; border-radius: 5px;">password123</code></span>
                 </div>
-                <div class="flex justify-end gap-2 mt-4">
-                    <button type="button" class="btn btn-outline" onclick="closeModal('addStudentModal')">Cancel</button>
-                    <button type="submit" class="btn" style="background: var(--accent-blue); color: white;">Save Student</button>
+                <div class="modal-footer">
+                    <button type="button" class="pill-btn" onclick="closeModal('addStudentModal')">Cancel</button>
+                    <button type="submit" class="pill-btn solid">Save student</button>
                 </div>
             </form>
         </div>
@@ -188,24 +378,23 @@
     <div class="modal-overlay" id="bulkModal">
         <div class="modal-card">
             <div class="modal-header">
-                <h3 class="mb-0">Bulk Student Upload</h3>
-                <button class="modal-close" onclick="closeModal('bulkModal')">&times;</button>
+                <h3>Bulk student upload</h3>
+                <button class="modal-close" onclick="closeModal('bulkModal')">×</button>
             </div>
-            <div class="mb-4">
-                <p>1. Download the Excel template</p>
-                <button class="btn btn-outline btn-block mb-3" style="border-color: var(--accent-blue); color: var(--accent-blue);">Download Template.xlsx</button>
-                
-                <p>2. Upload filled Excel file</p>
-                <div style="border: 2px dashed #cbd5e1; border-radius: var(--border-radius-md); padding: 2rem; text-align: center; background: #f8fafc; cursor: pointer;">
-                    <svg width="40" height="40" fill="none" stroke="#94a3b8" viewBox="0 0 24 24" style="margin: 0 auto 1rem;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                    <p class="text-sm font-bold text-dark">Drag and drop your Excel file here</p>
-                    <p class="text-xs text-light">or click to browse</p>
-                    <input type="file" style="display:none;" id="fileUpload">
-                </div>
+            <p style="font-family: var(--font-heading); font-weight: 600; color: var(--accent-deep); margin-bottom: 0.6rem;">1. Download the Excel template</p>
+            <button class="pill-btn" style="width: 100%; justify-content: center; margin-bottom: 1.2rem;">↓ Download template.xlsx</button>
+
+            <p style="font-family: var(--font-heading); font-weight: 600; color: var(--accent-deep); margin-bottom: 0.6rem;">2. Upload your filled file</p>
+            <div class="dropzone">
+                <div class="ic">⬆</div>
+                <div class="t">Drag &amp; drop your Excel file here</div>
+                <div class="s">…or click to browse</div>
+                <input type="file" style="display:none;" id="fileUpload">
             </div>
-            <div class="flex justify-end gap-2">
-                <button type="button" class="btn btn-outline" onclick="closeModal('bulkModal')">Cancel</button>
-                <button type="button" class="btn" style="background: var(--accent-blue); color: white;" onclick="handleFormSubmit(event, 'bulkModal', 'File uploaded successfully!')">Upload & Process</button>
+
+            <div class="modal-footer">
+                <button type="button" class="pill-btn" onclick="closeModal('bulkModal')">Cancel</button>
+                <button type="button" class="pill-btn solid" onclick="handleFormSubmit(event, 'bulkModal', 'File uploaded successfully!')">Upload &amp; process</button>
             </div>
         </div>
     </div>
@@ -223,29 +412,29 @@
 
         async function loadStudents() {
             try {
-                window.setTableLoading('studentsTable', true);
+                window.setTableLoading && window.setTableLoading('studentsTable', true);
                 const response = await window.api.getSchoolStudents();
                 const students = response.students || [];
                 const tbody = document.querySelector('#studentsTable tbody');
                 tbody.innerHTML = '';
-                
-                if(students.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-grey">No students registered yet.</td></tr>';
+
+                if (students.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: var(--text-grey); padding: 2rem;">No students registered yet.</td></tr>';
                     return;
                 }
 
                 students.forEach(student => {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td class="font-bold">${student.full_name}</td>
+                        <td style="font-weight: 700;">${student.full_name}</td>
                         <td>Class ${student.class_level}</td>
-                        <td>${student.username}</td>
-                        <td><span class="chip chip-green">Active</span></td>
+                        <td><code style="font-family: 'JetBrains Mono', ui-monospace, monospace; background: var(--accent-cream); padding: 0.2rem 0.55rem; border-radius: 6px; font-size: 0.85rem;">${student.username}</code></td>
+                        <td><span class="badge-pill">Active</span></td>
                         <td>
-                            <div class="flex gap-2">
-                                <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="viewStudent(${student.id})">View</button>
-                                <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="editStudent(${student.id})">Edit</button>
-                                <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; color: var(--danger); border-color: var(--danger);" onclick="deleteStudent(${student.id})">Delete</button>
+                            <div class="row-actions">
+                                <button class="icon-btn" title="View" onclick="viewStudent(${student.id})">👁</button>
+                                <button class="icon-btn" title="Edit" onclick="editStudent(${student.id})">✎</button>
+                                <button class="icon-btn danger" title="Delete" onclick="deleteStudent(${student.id})">🗑</button>
                             </div>
                         </td>
                     `;
@@ -261,35 +450,25 @@
             try {
                 const response = await window.api.getSchoolStudents();
                 const students = response.students || [];
-                if (students.length === 0) {
-                    window.showNotification('No data to export', 'warning');
-                    return;
-                }
+                if (students.length === 0) { window.showNotification('No data to export', 'warning'); return; }
 
                 const headers = ['Name', 'Class', 'Username', 'Email', 'Board', 'Registration Date'];
                 const csvRows = [headers.join(',')];
-                
                 students.forEach(s => {
-                    const row = [
-                        `"${s.full_name}"`,
-                        `"${s.class_level}"`,
-                        `"${s.username}"`,
-                        `"${s.email || ''}"`,
-                        `"${s.board || ''}"`,
+                    csvRows.push([
+                        `"${s.full_name}"`, `"${s.class_level}"`, `"${s.username}"`,
+                        `"${s.email || ''}"`, `"${s.board || ''}"`,
                         `"${new Date(s.registration_date).toLocaleDateString()}"`
-                    ];
-                    csvRows.push(row.join(','));
+                    ].join(','));
                 });
 
-                const csvContent = csvRows.join('\n');
-                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.setAttribute('href', url);
                 a.setAttribute('download', `school_students_export_${new Date().getTime()}.csv`);
                 a.click();
                 window.URL.revokeObjectURL(url);
-                
                 window.showNotification('Data exported successfully!', 'success');
             } catch (error) {
                 window.showNotification('Export failed', 'danger');
@@ -298,46 +477,29 @@
 
         async function deleteStudent(id) {
             if (confirm('Are you sure you want to delete this student?')) {
-                try {
-                    window.showNotification('Student deleted successfully (Simulated)', 'success');
-                    loadStudents();
-                } catch (error) {
-                    window.showNotification('Failed to delete student', 'danger');
-                }
+                window.showNotification('Student deleted successfully (Simulated)', 'success');
+                loadStudents();
             }
         }
 
-        function editStudent(id) {
-            window.showNotification('Edit functionality coming soon!', 'info');
-        }
-
-        function viewStudent(id) {
-            window.showNotification('Viewing student details...', 'info');
-        }
-
-        function openModal(id) {
-            document.getElementById(id).classList.add('active');
-        }
-        function closeModal(id) {
-            document.getElementById(id).classList.remove('active');
-        }
+        function editStudent(id) { window.showNotification('Edit functionality coming soon!', 'info'); }
+        function viewStudent(id) { window.showNotification('Viewing student details…', 'info'); }
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
         function handleFormSubmit(e, modalId, msg = 'Student saved successfully!') {
-            if(e) e.preventDefault();
+            if (e) e.preventDefault();
             closeModal(modalId);
             window.showNotification(msg, 'success');
         }
 
-        document.getElementById('addStudentForm').addEventListener('submit', async function(e) {
+        document.getElementById('addStudentForm').addEventListener('submit', async function (e) {
             e.preventDefault();
             const formData = window.serializeForm(this);
             const submitBtn = this.querySelector('button[type="submit"]');
-            
             try {
                 submitBtn.disabled = true;
-                submitBtn.textContent = 'Saving...';
-                
+                submitBtn.textContent = 'Saving…';
                 await window.api.addSchoolStudent(formData);
-                
                 window.showNotification('Student created successfully!', 'success');
                 closeModal('addStudentModal');
                 this.reset();
@@ -346,7 +508,7 @@
                 window.showNotification(error.message || 'Failed to create student', 'danger');
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Save Student';
+                submitBtn.textContent = 'Save student';
             }
         });
     </script>

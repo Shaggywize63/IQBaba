@@ -3,81 +3,161 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Submission Complete - IQ Baba</title>
+    <title>Submission complete | IQ Baba</title>
+    <link rel="icon" href="media/logo.png">
     <link rel="stylesheet" href="css/styles.css">
     <style>
-        .thank-you-page {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #F9FAFB;
+        body { background: var(--bg-main); }
+        .ty-shell {
+            min-height: 100vh; display: flex; align-items: center; justify-content: center;
+            padding: 4rem 1.5rem; position: relative; overflow: hidden;
         }
-        .success-card {
-            max-width: 500px;
-            width: 100%;
+        .ty-shell::before {
+            content: ""; position: absolute; top: -160px; left: -120px;
+            width: 480px; height: 480px; border-radius: 50%;
+            background: radial-gradient(circle, var(--secondary-color) 0%, transparent 65%);
+            opacity: 0.35; z-index: 0;
+        }
+        .ty-shell::after {
+            content: ""; position: absolute; bottom: -200px; right: -160px;
+            width: 540px; height: 540px; border-radius: 50%;
+            background: radial-gradient(circle, var(--primary-color) 0%, transparent 65%);
+            opacity: 0.25; z-index: 0;
+        }
+
+        .ty-card {
+            position: relative; z-index: 1;
+            background: white;
+            max-width: 540px; width: 100%;
+            border-radius: 36px;
+            padding: 3rem 2.5rem;
             text-align: center;
-            padding: 3rem 2rem;
+            border: 1px solid rgba(14,42,71,0.08);
+            box-shadow: 0 50px 120px -40px rgba(14,42,71,0.18);
         }
-        .success-icon {
-            width: 80px;
-            height: 80px;
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success);
+
+        .ty-brand {
+            display: inline-flex; align-items: center; gap: 0.6rem;
+            font-family: var(--font-heading); font-weight: 800;
+            color: var(--accent-deep); letter-spacing: -0.02em;
+            margin-bottom: 1.5rem;
+        }
+        .ty-brand img { height: 32px; }
+
+        .ty-tick {
+            width: 88px; height: 88px;
+            margin: 0 auto 1.6rem;
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 1.5rem;
+            background: var(--accent-yellow);
+            display: inline-flex; align-items: center; justify-content: center;
+            color: var(--accent-deep);
+            box-shadow: 0 0 0 12px rgba(255, 192, 77, 0.25);
+            animation: tickPop 0.7s cubic-bezier(0.16,1,0.3,1);
         }
-        .exam-details {
-            background: #F3F4F6;
-            border-radius: var(--border-radius-md);
-            padding: 1.5rem;
-            margin: 1.5rem 0;
+        @keyframes tickPop {
+            0% { transform: scale(0.4); opacity: 0; }
+            60% { transform: scale(1.08); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+
+        .ty-card h1 {
+            font-family: var(--font-heading); font-weight: 800;
+            font-size: clamp(1.8rem, 4vw, 2.6rem); line-height: 1.1;
+            letter-spacing: -0.03em; color: var(--accent-deep); margin: 0 0 0.6rem;
+        }
+        .ty-card h1 em { font-family: var(--font-serif); font-style: italic; font-weight: 400; color: var(--secondary-color); }
+        .ty-card p.lead { color: var(--text-grey); margin: 0 0 2rem; font-size: 1.02rem; line-height: 1.5; max-width: 38ch; margin-inline: auto; }
+
+        .detail-card {
+            background: var(--accent-cream);
+            border-radius: 22px;
+            padding: 1.4rem 1.6rem;
+            margin: 0 auto 1.5rem;
             text-align: left;
         }
-        .detail-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 0.5rem;
+        .detail-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 0.55rem 0; }
+        .detail-row + .detail-row { border-top: 1px dashed rgba(14,42,71,0.15); }
+        .detail-row .lbl { font-family: var(--font-heading); font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-grey); font-weight: 600; }
+        .detail-row .val { font-family: var(--font-heading); font-weight: 700; color: var(--accent-deep); font-size: 0.95rem; text-align: right; }
+
+        .badge-pill {
+            display: inline-block; padding: 0.3rem 0.8rem; border-radius: 999px;
+            font-family: var(--font-heading); font-size: 0.7rem; letter-spacing: 0.1em;
+            text-transform: uppercase; font-weight: 700;
+            background: rgba(6,214,160,0.18); color: #04A77D;
         }
-        .detail-row:last-child {
-            margin-bottom: 0;
+
+        .info-strip {
+            display: flex; gap: 0.85rem; align-items: flex-start;
+            background: white;
+            border: 1px dashed rgba(14,42,71,0.18);
+            border-radius: 18px;
+            padding: 1rem 1.2rem;
+            margin-bottom: 1.8rem;
+            text-align: left;
         }
+        .info-strip .ic { font-size: 1.2rem; flex: none; }
+        .info-strip p { font-family: var(--font-heading); font-size: 0.88rem; color: var(--text-grey); margin: 0; line-height: 1.45; }
+
+        .magnet {
+            display: inline-flex; align-items: center; gap: 0.7rem; justify-content: center;
+            background: var(--accent-deep); color: white;
+            padding: 1rem 2rem; border-radius: 999px;
+            font-family: var(--font-heading); font-weight: 600; font-size: 1rem;
+            transition: background 0.3s ease;
+            width: 100%;
+        }
+        .magnet:hover { background: var(--secondary-color); color: white; }
+        .magnet .arrow {
+            width: 26px; height: 26px; border-radius: 50%;
+            background: var(--secondary-color); color: white;
+            display: inline-flex; align-items: center; justify-content: center;
+            transition: transform 0.4s cubic-bezier(0.16,1,0.3,1), background 0.3s ease;
+        }
+        .magnet:hover .arrow { background: white; color: var(--accent-deep); transform: rotate(-45deg); }
+
+        @media (max-width: 480px) { .ty-card { padding: 2.5rem 1.5rem; } }
     </style>
 </head>
 <body>
-    <div class="thank-you-page">
-        <div class="glass-card success-card">
-            <div class="success-icon">
-                <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+
+    <div class="ty-shell">
+        <div class="ty-card">
+            <div class="ty-brand">
+                <img src="media/logo.png" alt="IQ Baba"><span>IQ Baba</span>
             </div>
-            
-            <h2 class="mb-2">Exam Submitted Successfully!</h2>
-            <p>Thank you for participating. Your responses have been recorded securely.</p>
-            
-            <div class="exam-details">
+
+            <div class="ty-tick">
+                <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+            </div>
+
+            <h1>That's a wrap,<br><em>champion.</em></h1>
+            <p class="lead">Your responses have been recorded securely. Take a deep breath — you earned it.</p>
+
+            <div class="detail-card">
                 <div class="detail-row">
-                    <span class="text-grey font-bold">Subject:</span>
-                    <span id="subjectName">Mathematics Olympiad</span>
+                    <span class="lbl">Subject</span>
+                    <span class="val" id="subjectName">Mathematics Olympiad</span>
                 </div>
                 <div class="detail-row">
-                    <span class="text-grey font-bold">Completion Time:</span>
-                    <span id="completionTime">Loading...</span>
+                    <span class="lbl">Submitted</span>
+                    <span class="val" id="completionTime">Loading…</span>
                 </div>
-                <div class="detail-row mt-2 pt-2" style="border-top: 1px solid #E5E7EB;">
-                    <span class="text-grey font-bold">Status:</span>
-                    <span class="badge badge-success">Completed</span>
+                <div class="detail-row">
+                    <span class="lbl">Status</span>
+                    <span class="val"><span class="badge-pill">Completed</span></span>
                 </div>
             </div>
-            
-            <div class="alert alert-warning text-left mb-4">
-                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <span class="text-sm">Results will be announced on your dashboard within 7 working days. Note: You cannot retake this exam.</span>
+
+            <div class="info-strip">
+                <span class="ic">⏳</span>
+                <p>Results will appear on your dashboard within <strong>7 working days</strong>. You cannot retake this exam.</p>
             </div>
-            
-            <a href="student-dashboard.html" class="btn btn-primary btn-block">Back to Dashboard</a>
+
+            <a href="student-dashboard.html" class="magnet">
+                Back to dashboard
+                <span class="arrow">→</span>
+            </a>
         </div>
     </div>
 
