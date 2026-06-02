@@ -1,0 +1,8 @@
+{
+  "name": "iqbaba-root",
+  "version": "1.0.0",
+  "scripts": {
+    "install": "cd backend && npm install",
+    "start": "node backend/server.js"
+  }
+}
