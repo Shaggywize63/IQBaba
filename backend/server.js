@@ -5,8 +5,9 @@ const helmet = require('helmet');
 const dotenv = require('dotenv');
 const { errorHandler } = require('./middleware/errorMiddleware');
 
-// Load env vars
-dotenv.config();
+// Load env vars (try backend/.env first, then fallback to root .env using absolute paths)
+dotenv.config({ path: path.resolve(__dirname, '.env') });
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const port = process.env.PORT || 5000;
 let BASE_PATH = process.env.BASE_PATH || '';
