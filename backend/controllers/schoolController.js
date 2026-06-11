@@ -101,9 +101,12 @@ const addStudent = async (req, res, next) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password || 'password123', salt);
 
+    const emailVal = email || null;
+    const phoneVal = phone || null;
+
     const [result] = await pool.execute(
-      'INSERT INTO students (full_name, username, password_hash, class_level, school_id, board, email, phone) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [fullName, username, hashedPassword, studentClass, schoolId, board, email, phone]
+      'INSERT INTO students (full_name, username, password_hash, class_level, school_id, board, email, phone, registration_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())',
+      [fullName, username, hashedPassword, studentClass, schoolId, board, emailVal, phoneVal]
     );
 
     res.status(201).json({
@@ -131,10 +134,21 @@ const bulkAddStudents = async (req, res, next) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash('password123', salt);
 
-    const values = students.map(s => [s.fullName, s.username, hashedPassword, s.classLevel, schoolId, s.board, s.email, s.phone]);
+    const regDate = new Date().toISOString().split('T')[0];
+    const values = students.map(s => [
+      s.fullName, 
+      s.username, 
+      hashedPassword, 
+      s.classLevel, 
+      schoolId, 
+      s.board, 
+      s.email || null, 
+      s.phone || null,
+      regDate
+    ]);
     
     await pool.query(
-      'INSERT INTO students (full_name, username, password_hash, class_level, school_id, board, email, phone) VALUES ?',
+      'INSERT INTO students (full_name, username, password_hash, class_level, school_id, board, email, phone, registration_date) VALUES ?',
       [values]
     );
 

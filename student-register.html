@@ -170,6 +170,41 @@
         }
         .submit-btn:hover .arrow { background: white; color: var(--accent-deep); transform: rotate(-45deg); }
         .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .relative { position: relative; }
+        .suggestions-container {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1.5px solid rgba(14, 42, 71, 0.12);
+            border-top: none;
+            border-radius: 0 0 16px 16px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 10px 30px rgba(14, 42, 71, 0.08);
+            margin-top: -4px;
+        }
+        .suggestion-item {
+            padding: 0.8rem 1.2rem;
+            cursor: pointer;
+            font-size: 0.95rem;
+            color: var(--accent-deep);
+            transition: all 0.2s ease;
+            font-family: var(--font-family);
+            text-align: left;
+        }
+        .suggestion-item:hover, .suggestion-item.highlighted {
+            background: rgba(255, 153, 51, 0.15);
+            color: var(--accent-deep);
+        }
+        .suggestion-item:last-child {
+            border-radius: 0 0 16px 16px;
+        }
     </style>
 </head>
 <body>
@@ -209,11 +244,11 @@
                             <option value="12">Class 12</option>
                         </select>
                     </div>
-                    <div class="field">
-                        <label for="schoolName">Affiliated School</label>
-                        <select id="schoolName" name="schoolName" class="input" required>
-                            <option value="">Select your school</option>
-                        </select>
+                    <div class="field relative">
+                        <label for="schoolSearch">Affiliated School</label>
+                        <input type="text" id="schoolSearch" class="input" placeholder="Search school name..." autocomplete="off" required>
+                        <input type="hidden" id="schoolId" name="schoolName" required>
+                        <div id="schoolSuggestions" class="suggestions-container" style="display: none;"></div>
                     </div>
                     <div class="field">
                         <label for="board">Education Board</label>
@@ -285,18 +320,118 @@
             });
         })();
 
-        // Existing register logic
+        // Search & Auto-fill logic
+        let schoolsList = [];
+
         document.addEventListener('DOMContentLoaded', async () => {
-            const schoolSelect = document.getElementById('schoolName');
-            if (window.mockData && window.mockData.schools) {
-                window.mockData.schools.forEach((school, index) => {
-                    const option = document.createElement('option');
-                    option.value = index + 1;
-                    option.textContent = school;
-                    schoolSelect.appendChild(option);
+            const schoolSearchInput = document.getElementById('schoolSearch');
+            const schoolIdInput = document.getElementById('schoolId');
+            const suggestionsContainer = document.getElementById('schoolSuggestions');
+            let highlightedIndex = -1;
+            let currentSuggestions = [];
+
+            // 1. Fetch schools list
+            try {
+                const resp = await window.api.request('/auth/schools');
+                schoolsList = resp || [];
+            } catch (err) {
+                console.warn('Failed to fetch schools from API, using mock data:', err);
+                if (window.mockData && window.mockData.schools) {
+                    schoolsList = window.mockData.schools.map((name, index) => ({
+                        id: index + 1,
+                        name: name
+                    }));
+                }
+            }
+
+            // 2. Autocomplete rendering & events
+            function renderSuggestions(filtered) {
+                currentSuggestions = filtered;
+                suggestionsContainer.innerHTML = '';
+                
+                if (filtered.length === 0) {
+                    suggestionsContainer.style.display = 'none';
+                    return;
+                }
+
+                filtered.forEach((school, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'suggestion-item';
+                    div.textContent = school.name;
+                    div.addEventListener('click', () => selectSchool(school));
+                    suggestionsContainer.appendChild(div);
+                });
+
+                suggestionsContainer.style.display = 'block';
+                highlightedIndex = -1;
+            }
+
+            function selectSchool(school) {
+                schoolSearchInput.value = school.name;
+                schoolIdInput.value = school.id;
+                suggestionsContainer.style.display = 'none';
+                highlightedIndex = -1;
+            }
+
+            schoolSearchInput.addEventListener('input', () => {
+                schoolIdInput.value = ''; // Reset ID on change
+                const val = schoolSearchInput.value.toLowerCase().trim();
+                if (!val) {
+                    suggestionsContainer.style.display = 'none';
+                    return;
+                }
+
+                const filtered = schoolsList.filter(s => s.name.toLowerCase().includes(val));
+                renderSuggestions(filtered);
+            });
+
+            // Keyboard navigation
+            schoolSearchInput.addEventListener('keydown', (e) => {
+                const items = suggestionsContainer.querySelectorAll('.suggestion-item');
+                if (suggestionsContainer.style.display === 'block' && items.length > 0) {
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        highlightedIndex = (highlightedIndex + 1) % items.length;
+                        updateHighlight(items);
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        highlightedIndex = (highlightedIndex - 1 + items.length) % items.length;
+                        updateHighlight(items);
+                    } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (highlightedIndex >= 0 && highlightedIndex < currentSuggestions.length) {
+                            selectSchool(currentSuggestions[highlightedIndex]);
+                        }
+                    } else if (e.key === 'Escape') {
+                        suggestionsContainer.style.display = 'none';
+                        highlightedIndex = -1;
+                    }
+                }
+            });
+
+            function updateHighlight(items) {
+                items.forEach((item, index) => {
+                    if (index === highlightedIndex) {
+                        item.classList.add('highlighted');
+                        item.scrollIntoView({ block: 'nearest' });
+                    } else {
+                        item.classList.remove('highlighted');
+                    }
                 });
             }
 
+            document.addEventListener('click', (e) => {
+                if (e.target !== schoolSearchInput && !suggestionsContainer.contains(e.target)) {
+                    suggestionsContainer.style.display = 'none';
+                    const val = schoolSearchInput.value.trim().toLowerCase();
+                    const exactMatch = schoolsList.find(s => s.name.toLowerCase() === val);
+                    if (exactMatch) {
+                        selectSchool(exactMatch);
+                    }
+                }
+            });
+
+            // 3. Populate Subjects
             const subjectContainer = document.getElementById('subjectContainer');
             if (window.mockData && window.mockData.subjects) {
                 window.mockData.subjects.forEach((subject, index) => {
@@ -323,7 +458,16 @@
                 const profile = await window.api.getStudentProfile();
                 document.getElementById('fullName').value = profile.full_name;
                 document.getElementById('studentClass').value = profile.class_level;
-                document.getElementById('schoolName').value = profile.school_id;
+                
+                // Lookup school by ID and populate input/hidden values
+                const schoolSearchInput = document.getElementById('schoolSearch');
+                const schoolIdInput = document.getElementById('schoolId');
+                const school = schoolsList.find(s => s.id == profile.school_id);
+                if (school) {
+                    schoolSearchInput.value = school.name;
+                    schoolIdInput.value = school.id;
+                }
+                
                 document.getElementById('board').value = profile.board;
                 document.getElementById('email').value = profile.email || '';
                 document.getElementById('phone').value = profile.phone || '';

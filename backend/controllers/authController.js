@@ -124,7 +124,20 @@ const loginUser = async (req, res, next) => {
   }
 };
 
+// @desc    Get all active schools for student registration
+// @route   GET /api/auth/schools
+// @access  Public
+const getPublicSchools = async (req, res, next) => {
+  try {
+    const [schools] = await pool.query('SELECT id, name FROM schools WHERE status = "Active" ORDER BY name');
+    res.json(schools);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   registerStudent,
-  loginUser
+  loginUser,
+  getPublicSchools
 };

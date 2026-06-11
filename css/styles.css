@@ -1112,3 +1112,185 @@ tbody tr:hover {
     scroll-behavior: auto !important;
   }
 }
+
+/* --- Support FAB & Modal Styles --- */
+.support-fab {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 32px rgba(255, 153, 51, 0.3);
+  cursor: pointer;
+  z-index: 999;
+  transition: all var(--transition-bounce);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+}
+
+.support-fab:hover {
+  transform: translateY(-5px) scale(1.05);
+  box-shadow: 0 12px 40px rgba(255, 153, 51, 0.4);
+}
+
+.support-fab svg {
+  width: 28px;
+  height: 28px;
+  transition: transform var(--transition-normal);
+}
+
+.support-fab:hover svg {
+  transform: rotate(15deg);
+}
+
+/* Glassmorphic Support Modal */
+.support-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(14, 42, 71, 0.35);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-normal);
+}
+
+.support-modal-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.support-modal-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  padding: 2.5rem;
+  border-radius: var(--border-radius-lg);
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 20px 50px rgba(14, 42, 71, 0.15);
+  transform: scale(0.9);
+  transition: transform var(--transition-bounce), opacity var(--transition-normal);
+  opacity: 0;
+}
+
+.support-modal-overlay.active .support-modal-card {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.support-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(14, 42, 71, 0.08);
+  padding-bottom: 1rem;
+}
+
+.support-modal-header h3 {
+  font-size: 1.5rem;
+  margin-bottom: 0;
+  color: var(--accent-deep);
+  font-family: var(--font-heading);
+}
+
+.support-modal-close {
+  background: rgba(14, 42, 71, 0.05);
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: var(--text-grey);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.support-modal-close:hover {
+  background: rgba(14, 42, 71, 0.1);
+  color: var(--accent-deep);
+}
+
+.support-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.support-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.support-form label {
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent-deep);
+  font-weight: 600;
+}
+
+.support-form input, 
+.support-form select, 
+.support-form textarea {
+  width: 100%;
+  padding: 0.9rem 1.1rem;
+  font-size: 0.95rem;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(14, 42, 71, 0.12);
+  border-radius: 12px;
+  color: var(--accent-deep);
+  font-family: var(--font-family);
+  transition: all var(--transition-fast);
+}
+
+.support-form input:focus, 
+.support-form select:focus, 
+.support-form textarea:focus {
+  outline: none;
+  background: white;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 4px rgba(59, 113, 159, 0.15);
+}
+
+.support-submit-btn {
+  background: var(--accent-deep);
+  color: white;
+  border: none;
+  padding: 1rem;
+  border-radius: var(--border-radius-pill);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s ease, transform var(--transition-fast);
+  margin-top: 0.5rem;
+}
+
+.support-submit-btn:hover {
+  background: var(--secondary-color);
+}
+
+.support-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

@@ -232,6 +232,13 @@ const api = {
       method: 'POST',
       body: JSON.stringify({ answers })
     });
+  },
+  
+  async contactSupport(supportData) {
+    return this.request('/support/contact', {
+      method: 'POST',
+      body: JSON.stringify(supportData)
+    });
   }
 };
 

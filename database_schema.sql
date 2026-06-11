@@ -16,8 +16,16 @@ CREATE TABLE IF NOT EXISTS `admins` (
 CREATE TABLE IF NOT EXISTS `schools` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `name` VARCHAR(255) NOT NULL,
+    `code` VARCHAR(50) DEFAULT NULL UNIQUE,
+    `contact_person` VARCHAR(255) DEFAULT NULL,
     `email` VARCHAR(255) NOT NULL UNIQUE,
     `phone` VARCHAR(20) DEFAULT NULL,
+    `board` VARCHAR(100) DEFAULT NULL,
+    `city` VARCHAR(100) DEFAULT NULL,
+    `address` TEXT DEFAULT NULL,
+    `classes` VARCHAR(255) DEFAULT NULL,
+    `subjects` VARCHAR(255) DEFAULT NULL,
+    `student_strength` INT DEFAULT 0,
     `password_hash` VARCHAR(255) NOT NULL,
     `status` ENUM('Active', 'Inactive') DEFAULT 'Active',
     `remember_token` VARCHAR(100) DEFAULT NULL,
@@ -98,6 +106,8 @@ CREATE TABLE IF NOT EXISTS `exams` (
     `subject_id` INT NOT NULL,
     `title` VARCHAR(255) NOT NULL,
     `schedule_date` DATE NOT NULL,
+    `start_date` DATE DEFAULT NULL,
+    `end_date` DATE DEFAULT NULL,
     `duration_minutes` INT NOT NULL,
     `total_questions` INT NOT NULL,
     `passing_percentage` DECIMAL(5,2) NOT NULL,
@@ -152,4 +162,16 @@ CREATE TABLE IF NOT EXISTS `results` (
     `date_taken` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (`student_id`) REFERENCES `students`(`id`) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (`exam_id`) REFERENCES `exams`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 13. Support Messages Table
+CREATE TABLE IF NOT EXISTS `support_messages` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `name` VARCHAR(255) NOT NULL,
+    `email` VARCHAR(255) NOT NULL,
+    `role` VARCHAR(50) DEFAULT 'Guest',
+    `subject` VARCHAR(255) NOT NULL,
+    `message` TEXT NOT NULL,
+    `status` ENUM('Open', 'Resolved') DEFAULT 'Open',
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

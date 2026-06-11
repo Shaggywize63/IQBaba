@@ -15,6 +15,30 @@ const getExamQuestions = async (req, res, next) => {
     }
     const exam = exams[0];
 
+    // Enforce date window checks
+    const todayStr = new Date().toISOString().split('T')[0];
+    
+    const formatDate = (d) => {
+      if (!d) return null;
+      if (d instanceof Date) {
+        return d.toISOString().split('T')[0];
+      }
+      return d;
+    };
+
+    const startDate = formatDate(exam.start_date);
+    const endDate = formatDate(exam.end_date);
+
+    if (startDate && todayStr < startDate) {
+      res.status(403);
+      throw new Error(`This exam is not available yet. It starts on ${new Date(startDate).toLocaleDateString()}`);
+    }
+
+    if (endDate && todayStr > endDate) {
+      res.status(403);
+      throw new Error('This exam is closed and can no longer be attempted');
+    }
+
     // Fetch student's school_id if not in token
     let studentSchoolId = req.user.school_id;
     if (!studentSchoolId && req.user.role === 'student') {

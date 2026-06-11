@@ -19,6 +19,55 @@ async function migrate() {
             await connection.query("ALTER TABLE schools ADD COLUMN status ENUM('Active', 'Inactive') DEFAULT 'Active' AFTER password_hash");
         }
 
+        // Add additional columns to schools
+        const schoolCols = [
+            { name: 'code', definition: "VARCHAR(50) DEFAULT NULL UNIQUE" },
+            { name: 'contact_person', definition: "VARCHAR(255) DEFAULT NULL" },
+            { name: 'board', definition: "VARCHAR(100) DEFAULT NULL" },
+            { name: 'city', definition: "VARCHAR(100) DEFAULT NULL" },
+            { name: 'address', definition: "TEXT DEFAULT NULL" },
+            { name: 'classes', definition: "VARCHAR(255) DEFAULT NULL" },
+            { name: 'subjects', definition: "VARCHAR(255) DEFAULT NULL" },
+            { name: 'student_strength', definition: "INT DEFAULT 0" }
+        ];
+
+        for (const col of schoolCols) {
+            const [hasCol] = await connection.query(`SHOW COLUMNS FROM schools LIKE "${col.name}"`);
+            if (hasCol.length === 0) {
+                console.log(`Adding ${col.name} column to schools table...`);
+                await connection.query(`ALTER TABLE schools ADD COLUMN ${col.name} ${col.definition}`);
+            }
+        }
+
+        // Add start_date and end_date to exams
+        const examCols = [
+            { name: 'start_date', definition: "DATE DEFAULT NULL" },
+            { name: 'end_date', definition: "DATE DEFAULT NULL" }
+        ];
+
+        for (const col of examCols) {
+            const [hasCol] = await connection.query(`SHOW COLUMNS FROM exams LIKE "${col.name}"`);
+            if (hasCol.length === 0) {
+                console.log(`Adding ${col.name} column to exams table...`);
+                await connection.query(`ALTER TABLE exams ADD COLUMN ${col.name} ${col.definition}`);
+            }
+        }
+
+        // Create support_messages table
+        console.log('Creating support_messages table...');
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS support_messages (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                email VARCHAR(255) NOT NULL,
+                role VARCHAR(50) DEFAULT 'Guest',
+                subject VARCHAR(255) NOT NULL,
+                message TEXT NOT NULL,
+                status ENUM('Open', 'Resolved') DEFAULT 'Open',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        `);
+
         // 2. Create Boards table
         console.log('Creating boards table...');
         await connection.query(`

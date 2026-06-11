@@ -119,6 +119,7 @@
         }
         .subj-card .badge-mini.available { background: var(--accent-yellow); color: var(--accent-deep); }
         .subj-card .badge-mini.completed { background: rgba(6,214,160,0.18); color: #04A77D; }
+        .subj-card .badge-mini.upcoming { background: rgba(59,113,159,0.15); color: var(--primary-color); }
         .subj-card h3 {
             font-family: var(--font-heading); font-weight: 700; font-size: 1.2rem;
             color: var(--accent-deep); letter-spacing: -0.01em; margin: 0;
@@ -245,6 +246,9 @@
                 return;
             }
 
+            // Initialize support FAB and modal
+            window.setupSupport({ role: 'student', showFab: true });
+
             const subjectsGrid = document.getElementById('subjectsGrid');
             const completedExamsTable = document.querySelector('#completedExamsTable tbody');
 
@@ -261,21 +265,63 @@
                     subjectsGrid.innerHTML = '<p class="empty-msg">No exams assigned to your enrolled subjects yet. Check back soon — your school will publish upcoming Olympiads here.</p>';
                 }
 
+                const todayStr = new Date().toISOString().split('T')[0];
+
                 data.upcomingExams.forEach(exam => {
                     const isCompleted = !!completedExamsMap[exam.title];
+                    
+                    const formatDate = (dateVal) => {
+                        if (!dateVal) return null;
+                        return new Date(dateVal).toISOString().split('T')[0];
+                    };
+
+                    const startDate = formatDate(exam.start_date);
+                    const endDate = formatDate(exam.end_date);
+                    const scheduleDate = formatDate(exam.schedule_date);
+
+                    let statusText = '🟡 Available';
+                    let statusClass = 'available';
+                    let isAvailable = true;
+                    let dateInfoText = '';
+
+                    if (isCompleted) {
+                        statusText = '✓ Completed';
+                        statusClass = 'completed';
+                        isAvailable = false;
+                    } else if (startDate && todayStr < startDate) {
+                        statusText = '⏳ Upcoming';
+                        statusClass = 'upcoming';
+                        isAvailable = false;
+                        dateInfoText = `Starts on ${new Date(startDate).toLocaleDateString()}`;
+                    } else if (endDate && todayStr > endDate) {
+                        statusText = '🔴 Closed';
+                        statusClass = 'completed'; // reuse color
+                        isAvailable = false;
+                        dateInfoText = 'Olympiad closed';
+                    } else {
+                        if (endDate) {
+                            dateInfoText = `Available until ${new Date(endDate).toLocaleDateString()}`;
+                        } else if (scheduleDate) {
+                            dateInfoText = `Scheduled for ${new Date(scheduleDate).toLocaleDateString()}`;
+                        }
+                    }
+
                     const card = document.createElement('div');
                     card.className = `subj-card ${isCompleted ? 'completed' : ''}`;
                     card.innerHTML = `
-                        <span class="badge-mini ${isCompleted ? 'completed' : 'available'}">${isCompleted ? '✓ Completed' : '🟡 Available'}</span>
+                        <span class="badge-mini ${statusClass}">${statusText}</span>
                         <span class="subj-name">${exam.subject_name}</span>
                         <h3>${exam.title}</h3>
                         <div class="meta-row">
                             <span>⏱ ${exam.duration_minutes} mins</span>
                             <span>📝 timed practice</span>
                         </div>
+                        ${dateInfoText ? `<div style="font-size: 0.78rem; color: var(--text-grey); margin-top: -0.25rem;">${dateInfoText}</div>` : ''}
                         ${isCompleted
                             ? '<button class="start-btn disabled" disabled>Exam completed</button>'
-                            : `<button class="start-btn" onclick="startExam('${exam.id}')">Start exam →</button>`}
+                            : (!isAvailable
+                                ? `<button class="start-btn disabled" style="background:#E5E7EB; color:#9CA3AF; cursor:not-allowed;" disabled>${statusText}</button>`
+                                : `<button class="start-btn" onclick="startExam('${exam.id}')">Start exam →</button>`)}
                     `;
                     subjectsGrid.appendChild(card);
                 });

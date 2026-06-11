@@ -315,9 +315,15 @@
                                                 <p class="text-xs text-grey text-center py-4">Select a subject to view available questions</p>
                                             </div>
                                         </div>
-                                        <div class="form-group">
-                                            <label class="form-label">Schedule Date *</label>
-                                            <input type="date" name="scheduleDate" class="form-control" required>
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div class="form-group">
+                                                <label class="form-label">Start Date *</label>
+                                                <input type="date" name="startDate" class="form-control" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="form-label">End Date *</label>
+                                                <input type="date" name="endDate" class="form-control" required>
+                                            </div>
                                         </div>
                                         
                                         <div class="form-group">
@@ -704,7 +710,9 @@
                 subjectId: parseInt(formData.subjectId),
                 topicId: formData.topicId ? parseInt(formData.topicId) : null,
                 title: formData.title,
-                scheduleDate: formData.scheduleDate,
+                startDate: formData.startDate,
+                endDate: formData.endDate,
+                scheduleDate: formData.startDate,
                 durationMinutes: parseInt(formData.durationMinutes),
                 totalQuestions: parseInt(formData.totalQuestions),
                 passingPercentage: parseInt(formData.passingPercentage),

@@ -366,6 +366,9 @@
                 return;
             }
 
+            // Initialize support FAB and modal
+            window.setupSupport({ role: 'school', showFab: true });
+
             try {
                 const stats = await window.api.getSchoolStats();
                 document.getElementById('statSchoolStudents').textContent = stats.totalStudents;

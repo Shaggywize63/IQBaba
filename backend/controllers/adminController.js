@@ -7,13 +7,13 @@ const bcrypt = require('bcrypt');
 const createExam = async (req, res, next) => {
   try {
     const { 
-      subjectId, topicId, title, scheduleDate, durationMinutes, totalQuestions, 
+      subjectId, topicId, title, scheduleDate, startDate, endDate, durationMinutes, totalQuestions, 
       passingPercentage, easyMarks, mediumMarks, hardMarks, negativeMarking, 
       isEnabled, randomizeQuestions, 
       questionIds, schoolId, studentIds, timeSlots 
     } = req.body;
 
-    if (!subjectId || !title || !scheduleDate || !durationMinutes || !totalQuestions || !passingPercentage) {
+    if (!subjectId || !title || (!scheduleDate && !startDate) || !durationMinutes || !totalQuestions || !passingPercentage) {
       res.status(400);
       throw new Error('Please provide all required exam configuration fields');
     }
@@ -24,9 +24,25 @@ const createExam = async (req, res, next) => {
     try {
       // Create Exam
       const [examResult] = await connection.execute(
-        `INSERT INTO exams (subject_id, topic_id, title, schedule_date, duration_minutes, total_questions, passing_percentage, easy_marks, medium_marks, hard_marks, negative_marking, is_enabled, randomize_questions)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [subjectId, topicId || null, title, scheduleDate, durationMinutes, totalQuestions, passingPercentage, easyMarks || 1, mediumMarks || 3, hardMarks || 5, negativeMarking || false, isEnabled !== undefined ? isEnabled : true, randomizeQuestions !== undefined ? randomizeQuestions : true]
+        `INSERT INTO exams (subject_id, topic_id, title, schedule_date, start_date, end_date, duration_minutes, total_questions, passing_percentage, easy_marks, medium_marks, hard_marks, negative_marking, is_enabled, randomize_questions)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          subjectId, 
+          topicId || null, 
+          title, 
+          scheduleDate || startDate, 
+          startDate || null, 
+          endDate || null, 
+          durationMinutes, 
+          totalQuestions, 
+          passingPercentage, 
+          easyMarks || 1, 
+          mediumMarks || 3, 
+          hardMarks || 5, 
+          negativeMarking || false, 
+          isEnabled !== undefined ? isEnabled : true, 
+          randomizeQuestions !== undefined ? randomizeQuestions : true
+        ]
       );
 
       const examId = examResult.insertId;
@@ -244,20 +260,45 @@ const getQuestions = async (req, res, next) => {
 // @access  Private (Admin)
 const addSchool = async (req, res, next) => {
   try {
-    const { name, code, contactPerson, email, phone } = req.body;
+    const { name, code, contactPerson, email, phone, board, city, address, classes, subjects, studentStrength } = req.body;
     
     // Hash a default password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash('school123', salt);
 
+    // Auto-generate school code if not provided
+    let schoolCode = code;
+    if (!schoolCode) {
+      const cleanName = name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+      const prefix = cleanName.length >= 3 ? cleanName.substring(0, 3) : (cleanName + 'SCH').substring(0, 3);
+      schoolCode = `SCH-${prefix}-${Math.floor(1000 + Math.random() * 9000)}`;
+    }
+
+    const classesStr = Array.isArray(classes) ? classes.join(',') : (classes || '');
+    const subjectsStr = Array.isArray(subjects) ? subjects.join(',') : (subjects || '');
+
     const [result] = await pool.execute(
-      'INSERT INTO schools (name, code, contact_person, email, phone, password_hash) VALUES (?, ?, ?, ?, ?, ?)',
-      [name, code, contactPerson, email, phone, hashedPassword]
+      'INSERT INTO schools (name, code, contact_person, email, phone, board, city, address, classes, subjects, student_strength, password_hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [
+        name, 
+        schoolCode, 
+        contactPerson || null, 
+        email, 
+        phone || null, 
+        board || null, 
+        city || null, 
+        address || null, 
+        classesStr || null, 
+        subjectsStr || null, 
+        studentStrength ? parseInt(studentStrength) : 0, 
+        hashedPassword
+      ]
     );
 
     res.status(201).json({
       message: 'School created successfully',
-      schoolId: result.insertId
+      schoolId: result.insertId,
+      code: schoolCode
     });
   } catch (error) {
     if (error.code === 'ER_DUP_ENTRY') {
@@ -288,10 +329,34 @@ const bulkAddSchools = async (req, res, next) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash('school123', salt);
 
-    const values = schools.map(s => [s.name, s.code, s.contactPerson, s.email, s.phone, hashedPassword]);
+    const values = schools.map(s => {
+      let schoolCode = s.code;
+      if (!schoolCode) {
+        const cleanName = s.name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+        const prefix = cleanName.length >= 3 ? cleanName.substring(0, 3) : (cleanName + 'SCH').substring(0, 3);
+        schoolCode = `SCH-${prefix}-${Math.floor(1000 + Math.random() * 9000)}`;
+      }
+      const classesStr = Array.isArray(s.classes) ? s.classes.join(',') : (s.classes || '');
+      const subjectsStr = Array.isArray(s.subjects) ? s.subjects.join(',') : (s.subjects || '');
+      
+      return [
+        s.name,
+        schoolCode,
+        s.contactPerson || null,
+        s.email,
+        s.phone || null,
+        s.board || null,
+        s.city || null,
+        s.address || null,
+        classesStr || null,
+        subjectsStr || null,
+        s.studentStrength ? parseInt(s.studentStrength) : 0,
+        hashedPassword
+      ];
+    });
     
     await pool.query(
-      'INSERT INTO schools (name, code, contact_person, email, phone, password_hash) VALUES ?',
+      'INSERT INTO schools (name, code, contact_person, email, phone, board, city, address, classes, subjects, student_strength, password_hash) VALUES ?',
       [values]
     );
 
@@ -312,10 +377,21 @@ const bulkAddStudents = async (req, res, next) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash('password123', salt);
 
-    const values = students.map(s => [s.fullName, s.username, hashedPassword, s.classLevel, s.schoolId, s.board, s.email, s.phone]);
+    const regDate = new Date().toISOString().split('T')[0];
+    const values = students.map(s => [
+      s.fullName, 
+      s.username, 
+      hashedPassword, 
+      s.classLevel, 
+      s.schoolId, 
+      s.board, 
+      s.email || null, 
+      s.phone || null,
+      regDate
+    ]);
     
     await pool.query(
-      'INSERT INTO students (full_name, username, password_hash, class_level, school_id, board, email, phone) VALUES ?',
+      'INSERT INTO students (full_name, username, password_hash, class_level, school_id, board, email, phone, registration_date) VALUES ?',
       [values]
     );
 
@@ -332,9 +408,12 @@ const addStudent = async (req, res, next) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password || 'password123', salt);
 
+    const emailVal = email || null;
+    const phoneVal = phone || null;
+
     const [result] = await pool.execute(
       'INSERT INTO students (full_name, username, password_hash, class_level, school_id, board, email, phone, registration_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())',
-      [fullName, username, hashedPassword, studentClass, schoolId, board, email, phone]
+      [fullName, username, hashedPassword, studentClass, schoolId, board, emailVal, phoneVal]
     );
 
     res.status(201).json({

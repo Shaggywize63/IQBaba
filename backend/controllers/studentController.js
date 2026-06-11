@@ -30,7 +30,7 @@ const getStudentDashboard = async (req, res, next) => {
 
     // Fetch upcoming exams (exams assigned to the student or their school)
     const [exams] = await pool.query(`
-      SELECT DISTINCT e.id, e.title, e.schedule_date, e.duration_minutes, s.name as subject_name
+      SELECT DISTINCT e.id, e.title, e.schedule_date, e.start_date, e.end_date, e.duration_minutes, s.name as subject_name
       FROM exams e
       JOIN subjects s ON e.subject_id = s.id
       JOIN exam_assignments ea ON e.id = ea.exam_id
