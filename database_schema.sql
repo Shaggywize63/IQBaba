@@ -75,10 +75,12 @@ CREATE TABLE IF NOT EXISTS `students` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `full_name` VARCHAR(255) NOT NULL,
     `class_level` VARCHAR(50) NOT NULL COMMENT 'e.g., 6, 7, 8, 9, 10, 11, 12',
-    `school_id` INT NOT NULL,
+    `school_id` INT DEFAULT NULL,
+    `custom_school_name` VARCHAR(255) DEFAULT NULL,
     `board` VARCHAR(100) NOT NULL,
     `email` VARCHAR(255) DEFAULT NULL,
     `phone` VARCHAR(20) DEFAULT NULL,
+    `id_card_path` VARCHAR(255) DEFAULT NULL,
     `username` VARCHAR(100) NOT NULL UNIQUE,
     `password_hash` VARCHAR(255) NOT NULL,
     `status` ENUM('Active', 'Inactive') DEFAULT 'Active',
@@ -87,7 +89,7 @@ CREATE TABLE IF NOT EXISTS `students` (
     `last_login` TIMESTAMP NULL DEFAULT NULL,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (`school_id`) REFERENCES `schools`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE
+    FOREIGN KEY (`school_id`) REFERENCES `schools`(`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 8. Student Subjects (Many-to-Many)

@@ -247,7 +247,7 @@
                     <div class="field relative">
                         <label for="schoolSearch">Affiliated School</label>
                         <input type="text" id="schoolSearch" class="input" placeholder="Search school name..." autocomplete="off" required>
-                        <input type="hidden" id="schoolId" name="schoolName" required>
+                        <input type="hidden" id="schoolId" name="schoolName">
                         <div id="schoolSuggestions" class="suggestions-container" style="display: none;"></div>
                     </div>
                     <div class="field">
@@ -267,6 +267,11 @@
                     <div class="field">
                         <label for="phone">Phone Number</label>
                         <input type="tel" id="phone" name="phone" class="input" placeholder="+91 XXXX XXX XXX">
+                    </div>
+                    <div class="field" id="idCardField" style="display: none;">
+                        <label for="idCard">Student ID Card (Image/PDF) <span style="color:var(--danger)">*</span></label>
+                        <input type="file" id="idCard" accept="image/*,.pdf" class="input">
+                        <small class="text-grey" style="font-size: 0.8rem; margin-top: 0.2rem;">Required since your school is not yet registered. Max 5MB.</small>
                     </div>
                 </div>
 
@@ -373,8 +378,21 @@
                 highlightedIndex = -1;
             }
 
+            function toggleIdCardField() {
+                const idCardField = document.getElementById('idCardField');
+                const idCardInput = document.getElementById('idCard');
+                if (!schoolIdInput.value && schoolSearchInput.value.trim() !== '') {
+                    idCardField.style.display = 'flex';
+                    idCardInput.required = true;
+                } else {
+                    idCardField.style.display = 'none';
+                    idCardInput.required = false;
+                }
+            }
+
             schoolSearchInput.addEventListener('input', () => {
                 schoolIdInput.value = ''; // Reset ID on change
+                toggleIdCardField();
                 const val = schoolSearchInput.value.toLowerCase().trim();
                 if (!val) {
                     suggestionsContainer.style.display = 'none';
@@ -427,6 +445,8 @@
                     const exactMatch = schoolsList.find(s => s.name.toLowerCase() === val);
                     if (exactMatch) {
                         selectSchool(exactMatch);
+                    } else {
+                        toggleIdCardField();
                     }
                 }
             });
@@ -466,6 +486,16 @@
                 if (school) {
                     schoolSearchInput.value = school.name;
                     schoolIdInput.value = school.id;
+                } else if (profile.custom_school_name) {
+                    schoolSearchInput.value = profile.custom_school_name;
+                    schoolIdInput.value = '';
+                }
+                
+                const idCardField = document.getElementById('idCardField');
+                const idCardInput = document.getElementById('idCard');
+                if (!schoolIdInput.value && schoolSearchInput.value.trim() !== '') {
+                    idCardField.style.display = 'flex';
+                    idCardInput.required = false; // Optional when editing
                 }
                 
                 document.getElementById('board').value = profile.board;
@@ -505,7 +535,29 @@
             }
 
             const formData = window.serializeForm(this);
-            const submitBtn = this.querySelector('button[type="submit"]');
+            const idCardFile = document.getElementById('idCard').files[0];
+            
+            if (idCardFile) {
+                const reader = new FileReader();
+                reader.readAsDataURL(idCardFile);
+                reader.onload = async () => {
+                    const idCardPayload = {
+                        name: idCardFile.name,
+                        type: idCardFile.type,
+                        data: reader.result
+                    };
+                    await submitForm(formData, idCardPayload);
+                };
+                reader.onerror = () => {
+                    window.showNotification('Failed to read ID card file.', 'danger');
+                };
+            } else {
+                await submitForm(formData, null);
+            }
+        });
+
+        async function submitForm(formData, idCardPayload) {
+            const submitBtn = document.querySelector('#registerForm button[type="submit"]');
             try {
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = 'Processing… <span class="arrow">⏳</span>';
@@ -513,11 +565,13 @@
                 const payload = {
                     fullName: formData.fullName,
                     studentClass: formData.studentClass,
-                    schoolId: parseInt(formData.schoolName),
+                    schoolId: formData.schoolName ? parseInt(formData.schoolName) : null,
+                    customSchoolName: formData.schoolName ? null : document.getElementById('schoolSearch').value.trim(),
                     board: formData.board,
                     email: formData.email,
                     phone: formData.phone,
-                    subjects: Array.isArray(formData.subjects) ? formData.subjects.map(id => parseInt(id)) : [parseInt(formData.subjects)]
+                    subjects: Array.isArray(formData.subjects) ? formData.subjects.map(id => parseInt(id)) : [parseInt(formData.subjects)],
+                    idCardFile: idCardPayload
                 };
 
                 if (window.api.getToken() && window.api.getRole() === 'student') {
@@ -525,8 +579,14 @@
                     window.showNotification('Profile updated!', 'success');
                 } else {
                     payload.password = 'password123';
-                    await window.api.registerStudent(payload);
-                    window.showNotification('Welcome aboard! Registration complete.', 'success');
+                    const response = await window.api.registerStudent(payload);
+                    if (response.status === 'Inactive') {
+                        window.showNotification('Registration successful! Account pending admin activation.', 'info');
+                        setTimeout(() => { window.location.href = 'student-login.html'; }, 3000);
+                        return;
+                    } else {
+                        window.showNotification('Welcome aboard! Registration complete.', 'success');
+                    }
                 }
 
                 setTimeout(() => { window.location.href = 'student-dashboard.html'; }, 1000);
@@ -535,7 +595,7 @@
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = 'Complete registration <span class="arrow">→</span>';
             }
-        });
+        }
     </script>
 </body>
 </html>

@@ -196,7 +196,7 @@ const getStats = async (req, res, next) => {
 const getStudents = async (req, res, next) => {
   try {
     const { schoolId } = req.query;
-    let query = 'SELECT s.*, sc.name as school_name FROM students s JOIN schools sc ON s.school_id = sc.id';
+    let query = 'SELECT s.*, sc.name as school_name FROM students s LEFT JOIN schools sc ON s.school_id = sc.id';
     const params = [];
     
     if (schoolId) {
@@ -229,10 +229,10 @@ const getSchools = async (req, res, next) => {
 const getResults = async (req, res, next) => {
   try {
     const query = `
-      SELECT r.id, s.full_name as student_name, sc.name as school_name, e.title as exam_title, r.score, r.percentage, r.date_taken
+      SELECT r.id, s.full_name as student_name, sc.name as school_name, s.custom_school_name, e.title as exam_title, r.score, r.percentage, r.date_taken
       FROM results r
       JOIN students s ON r.student_id = s.id
-      JOIN schools sc ON s.school_id = sc.id
+      LEFT JOIN schools sc ON s.school_id = sc.id
       JOIN exams e ON r.exam_id = e.id
       ORDER BY r.date_taken DESC
     `;

@@ -127,6 +127,22 @@ async function migrate() {
             await connection.query('INSERT IGNORE INTO classes (name, level) VALUES (?, ?)', [`Class ${i}`, i]);
         }
 
+        // Update students table for unregistered schools and ID uploads
+        console.log('Altering students school_id column to be NULLable...');
+        await connection.query('ALTER TABLE students MODIFY COLUMN school_id INT DEFAULT NULL');
+
+        const [hasCustomSchool] = await connection.query('SHOW COLUMNS FROM students LIKE "custom_school_name"');
+        if (hasCustomSchool.length === 0) {
+            console.log('Adding custom_school_name column to students table...');
+            await connection.query('ALTER TABLE students ADD COLUMN custom_school_name VARCHAR(255) DEFAULT NULL AFTER school_id');
+        }
+
+        const [hasIdCard] = await connection.query('SHOW COLUMNS FROM students LIKE "id_card_path"');
+        if (hasIdCard.length === 0) {
+            console.log('Adding id_card_path column to students table...');
+            await connection.query('ALTER TABLE students ADD COLUMN id_card_path VARCHAR(255) DEFAULT NULL AFTER phone');
+        }
+
         console.log('Migration completed successfully!');
     } catch (error) {
         console.error('Migration failed:', error);

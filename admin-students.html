@@ -124,6 +124,7 @@
                                     <th>Class</th>
                                     <th>School</th>
                                     <th>Username</th>
+                                    <th>ID Card</th>
                                     <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
@@ -263,11 +264,28 @@
                     const nextStatus = student.status === 'Active' ? 'Inactive' : 'Active';
                     const statusBtnText = student.status === 'Active' ? 'Deactivate' : 'Activate';
 
+                    let schoolHtml = '';
+                    if (student.school_name) {
+                        schoolHtml = student.school_name;
+                    } else if (student.custom_school_name) {
+                        schoolHtml = `${student.custom_school_name} <span class="badge badge-warning" style="background:rgba(255, 153, 51, 0.15); color:var(--secondary-color); border:1px solid rgba(255,153,51,0.25); font-size:0.65rem; padding: 2px 6px; border-radius:4px; margin-left:4px;">Unregistered</span>`;
+                    } else {
+                        schoolHtml = 'N/A';
+                    }
+
+                    let idCardHtml = '';
+                    if (student.id_card_path) {
+                        idCardHtml = `<a href="${student.id_card_path}" target="_blank" class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">View ID Card</a>`;
+                    } else {
+                        idCardHtml = '<span class="text-grey text-xs">No ID Card</span>';
+                    }
+
                     tr.innerHTML = `
                         <td class="font-bold">${student.full_name}</td>
                         <td>Class ${student.class_level}</td>
-                        <td>${student.school_name || 'N/A'}</td>
+                        <td>${schoolHtml}</td>
                         <td>${student.username}</td>
+                        <td>${idCardHtml}</td>
                         <td><span class="badge ${statusClass}">${student.status}</span></td>
                         <td>
                             <div class="flex gap-2">

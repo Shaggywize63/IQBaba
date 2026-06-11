@@ -14,9 +14,9 @@ const generateToken = (id, role) => {
 // @access  Public
 const registerStudent = async (req, res, next) => {
   try {
-    const { fullName, studentClass, schoolId, board, email, phone, password, subjects } = req.body;
+    const { fullName, studentClass, schoolId, customSchoolName, board, email, phone, password, subjects, idCardFile } = req.body;
 
-    if (!fullName || !studentClass || !schoolId || !board || !password || !subjects || subjects.length === 0) {
+    if (!fullName || !studentClass || (!schoolId && !customSchoolName) || !board || !password || !subjects || subjects.length === 0) {
       res.status(400);
       throw new Error('Please add all required fields and select at least one subject');
     }
@@ -29,6 +29,26 @@ const registerStudent = async (req, res, next) => {
     const hashedPassword = await bcrypt.hash(password, salt);
     const registrationDate = new Date().toISOString().split('T')[0];
 
+    // Determine status (Active if registered school, Inactive if unregistered school)
+    const status = schoolId ? 'Active' : 'Inactive';
+
+    // Handle File Upload (Base64)
+    let idCardPath = null;
+    if (idCardFile && idCardFile.data && idCardFile.name) {
+      const fs = require('fs');
+      const path = require('path');
+      const uploadsDir = path.resolve(__dirname, '../../uploads');
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+      const ext = path.extname(idCardFile.name) || '.png';
+      const filename = `student-id-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}${ext}`;
+      const filePath = path.join(uploadsDir, filename);
+      const base64Data = idCardFile.data.replace(/^data:.*?;base64,/, "");
+      fs.writeFileSync(filePath, Buffer.from(base64Data, 'base64'));
+      idCardPath = `uploads/${filename}`;
+    }
+
     // Transaction for atomic insert
     const connection = await pool.getConnection();
     await connection.beginTransaction();
@@ -36,8 +56,8 @@ const registerStudent = async (req, res, next) => {
     try {
       // Insert Student
       const [studentResult] = await connection.execute(
-        'INSERT INTO students (full_name, class_level, school_id, board, email, phone, username, password_hash, registration_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [fullName, studentClass, schoolId, board, email || null, phone || null, username, hashedPassword, registrationDate]
+        'INSERT INTO students (full_name, class_level, school_id, custom_school_name, board, email, phone, id_card_path, username, password_hash, status, registration_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [fullName, studentClass, schoolId || null, customSchoolName || null, board, email || null, phone || null, idCardPath, username, hashedPassword, status, registrationDate]
       );
       
       const studentId = studentResult.insertId;
@@ -56,6 +76,7 @@ const registerStudent = async (req, res, next) => {
         id: studentId,
         username,
         email,
+        status,
         token: generateToken(studentId, 'student')
       });
     } catch (error) {
