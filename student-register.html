@@ -244,11 +244,21 @@
                             <option value="12">Class 12</option>
                         </select>
                     </div>
-                    <div class="field relative">
+                    <div class="field relative" id="schoolSearchGroup">
                         <label for="schoolSearch">Affiliated School</label>
                         <input type="text" id="schoolSearch" class="input" placeholder="Search school name..." autocomplete="off" required>
                         <input type="hidden" id="schoolId" name="schoolName">
                         <div id="schoolSuggestions" class="suggestions-container" style="display: none;"></div>
+                        <small style="margin-top: 0.4rem; display: block;">
+                            School not listed? <a href="#" id="btnShowManualSchool" style="color: var(--secondary-color); font-weight: 600; text-decoration: underline;">Manually add your school</a>
+                        </small>
+                    </div>
+                    <div class="field" id="schoolManualGroup" style="display: none;">
+                        <label for="customSchoolName">School Name (Unregistered)</label>
+                        <input type="text" id="customSchoolName" class="input" placeholder="Enter your school name...">
+                        <small style="margin-top: 0.4rem; display: block;">
+                            <a href="#" id="btnShowSearchSchool" style="color: var(--secondary-color); font-weight: 600; text-decoration: underline;">← Back to school search</a>
+                        </small>
                     </div>
                     <div class="field">
                         <label for="board">Education Board</label>
@@ -378,21 +388,51 @@
                 highlightedIndex = -1;
             }
 
-            function toggleIdCardField() {
-                const idCardField = document.getElementById('idCardField');
-                const idCardInput = document.getElementById('idCard');
-                if (!schoolIdInput.value && schoolSearchInput.value.trim() !== '') {
+            const schoolSearchGroup = document.getElementById('schoolSearchGroup');
+            const schoolManualGroup = document.getElementById('schoolManualGroup');
+            const customSchoolInput = document.getElementById('customSchoolName');
+            const idCardField = document.getElementById('idCardField');
+            const idCardInput = document.getElementById('idCard');
+
+            window.switchMode = function(mode) {
+                const isEditMode = window.api && window.api.getToken() && window.api.getRole() === 'student';
+                if (mode === 'manual') {
+                    schoolSearchGroup.style.display = 'none';
+                    schoolSearchInput.required = false;
+                    schoolSearchInput.value = '';
+                    schoolIdInput.value = '';
+
+                    schoolManualGroup.style.display = 'block';
+                    customSchoolInput.required = true;
+
                     idCardField.style.display = 'flex';
-                    idCardInput.required = true;
+                    idCardInput.required = !isEditMode; // required only for new registrations
                 } else {
+                    schoolManualGroup.style.display = 'none';
+                    customSchoolInput.required = false;
+                    customSchoolInput.value = '';
+
+                    schoolSearchGroup.style.display = 'block';
+                    schoolSearchInput.required = true;
+
                     idCardField.style.display = 'none';
                     idCardInput.required = false;
+                    idCardInput.value = '';
                 }
-            }
+            };
+
+            document.getElementById('btnShowManualSchool').addEventListener('click', (e) => {
+                e.preventDefault();
+                window.switchMode('manual');
+            });
+
+            document.getElementById('btnShowSearchSchool').addEventListener('click', (e) => {
+                e.preventDefault();
+                window.switchMode('search');
+            });
 
             schoolSearchInput.addEventListener('input', () => {
                 schoolIdInput.value = ''; // Reset ID on change
-                toggleIdCardField();
                 const val = schoolSearchInput.value.toLowerCase().trim();
                 if (!val) {
                     suggestionsContainer.style.display = 'none';
@@ -445,8 +485,6 @@
                     const exactMatch = schoolsList.find(s => s.name.toLowerCase() === val);
                     if (exactMatch) {
                         selectSchool(exactMatch);
-                    } else {
-                        toggleIdCardField();
                     }
                 }
             });
@@ -482,20 +520,15 @@
                 // Lookup school by ID and populate input/hidden values
                 const schoolSearchInput = document.getElementById('schoolSearch');
                 const schoolIdInput = document.getElementById('schoolId');
+                const customSchoolInput = document.getElementById('customSchoolName');
                 const school = schoolsList.find(s => s.id == profile.school_id);
                 if (school) {
+                    window.switchMode('search');
                     schoolSearchInput.value = school.name;
                     schoolIdInput.value = school.id;
                 } else if (profile.custom_school_name) {
-                    schoolSearchInput.value = profile.custom_school_name;
-                    schoolIdInput.value = '';
-                }
-                
-                const idCardField = document.getElementById('idCardField');
-                const idCardInput = document.getElementById('idCard');
-                if (!schoolIdInput.value && schoolSearchInput.value.trim() !== '') {
-                    idCardField.style.display = 'flex';
-                    idCardInput.required = false; // Optional when editing
+                    window.switchMode('manual');
+                    customSchoolInput.value = profile.custom_school_name;
                 }
                 
                 document.getElementById('board').value = profile.board;
@@ -534,6 +567,21 @@
                 return;
             }
 
+            const isManualMode = document.getElementById('schoolManualGroup').style.display === 'block';
+            if (!isManualMode) {
+                const schoolId = document.getElementById('schoolId').value;
+                if (!schoolId) {
+                    window.showNotification('Please select a school from the suggestions, or click "Manually add your school".', 'danger');
+                    return;
+                }
+            } else {
+                const customName = document.getElementById('customSchoolName').value.trim();
+                if (!customName) {
+                    window.showNotification('Please enter your school name.', 'danger');
+                    return;
+                }
+            }
+
             const formData = window.serializeForm(this);
             const idCardFile = document.getElementById('idCard').files[0];
             
@@ -552,6 +600,11 @@
                     window.showNotification('Failed to read ID card file.', 'danger');
                 };
             } else {
+                const isEditMode = window.api && window.api.getToken() && window.api.getRole() === 'student';
+                if (isManualMode && !isEditMode) {
+                    window.showNotification('Please upload your Student ID Card.', 'danger');
+                    return;
+                }
                 await submitForm(formData, null);
             }
         });
@@ -562,11 +615,15 @@
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = 'Processing… <span class="arrow">⏳</span>';
 
+                const isManualMode = document.getElementById('schoolManualGroup').style.display === 'block';
+                const schoolId = isManualMode ? null : parseInt(document.getElementById('schoolId').value);
+                const customSchoolName = isManualMode ? document.getElementById('customSchoolName').value.trim() : null;
+
                 const payload = {
                     fullName: formData.fullName,
                     studentClass: formData.studentClass,
-                    schoolId: formData.schoolName ? parseInt(formData.schoolName) : null,
-                    customSchoolName: formData.schoolName ? null : document.getElementById('schoolSearch').value.trim(),
+                    schoolId: schoolId,
+                    customSchoolName: customSchoolName,
                     board: formData.board,
                     email: formData.email,
                     phone: formData.phone,
