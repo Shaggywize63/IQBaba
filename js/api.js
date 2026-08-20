@@ -130,6 +130,18 @@ const api = {
       body: JSON.stringify(questionData)
     });
   },
+  async bulkAddAdminQuestions(questions) {
+    return this.request('/admin/questions/bulk', {
+      method: 'POST',
+      body: JSON.stringify({ questions })
+    });
+  },
+  async updateAdminQuestion(id, questionData) {
+    return this.request(`/admin/questions/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(questionData)
+    });
+  },
   async deleteAdminQuestion(id) {
     return this.request(`/admin/questions/${id}`, { method: 'DELETE' });
   },
@@ -140,6 +152,12 @@ const api = {
     });
   },
 
+  async updateAdminStudent(id, studentData) {
+    return this.request(`/admin/students/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(studentData)
+    });
+  },
   async deleteAdminStudent(id) {
     return this.request(`/admin/students/${id}`, { method: 'DELETE' });
   },
@@ -150,6 +168,12 @@ const api = {
     });
   },
 
+  async updateAdminSchool(id, schoolData) {
+    return this.request(`/admin/schools/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(schoolData)
+    });
+  },
   async deleteAdminSchool(id) {
     return this.request(`/admin/schools/${id}`, { method: 'DELETE' });
   },
@@ -165,6 +189,9 @@ const api = {
   async addAdminBoard(data) {
     return this.request('/admin/boards', { method: 'POST', body: JSON.stringify(data) });
   },
+  async updateAdminBoard(id, data) {
+    return this.request(`/admin/boards/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  },
   async deleteAdminBoard(id) {
     return this.request(`/admin/boards/${id}`, { method: 'DELETE' });
   },
@@ -173,6 +200,9 @@ const api = {
   async getAdminClasses() { return this.request('/admin/classes'); },
   async addAdminClass(data) {
     return this.request('/admin/classes', { method: 'POST', body: JSON.stringify(data) });
+  },
+  async updateAdminClass(id, data) {
+    return this.request(`/admin/classes/${id}`, { method: 'PUT', body: JSON.stringify(data) });
   },
   async deleteAdminClass(id) {
     return this.request(`/admin/classes/${id}`, { method: 'DELETE' });
@@ -183,6 +213,9 @@ const api = {
   async addAdminTopic(data) {
     return this.request('/admin/topics', { method: 'POST', body: JSON.stringify(data) });
   },
+  async updateAdminTopic(id, data) {
+    return this.request(`/admin/topics/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  },
   async deleteAdminTopic(id) {
     return this.request(`/admin/topics/${id}`, { method: 'DELETE' });
   },
@@ -191,6 +224,9 @@ const api = {
   async getAdminSubjects() { return this.request('/admin/subjects'); },
   async addAdminSubject(data) {
     return this.request('/admin/subjects', { method: 'POST', body: JSON.stringify(data) });
+  },
+  async updateAdminSubject(id, data) {
+    return this.request(`/admin/subjects/${id}`, { method: 'PUT', body: JSON.stringify(data) });
   },
   async deleteAdminSubject(id) {
     return this.request(`/admin/subjects/${id}`, { method: 'DELETE' });
@@ -210,6 +246,15 @@ const api = {
       method: 'POST',
       body: JSON.stringify({ students })
     });
+  },
+  async updateSchoolStudent(id, studentData) {
+    return this.request(`/schools/students/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(studentData)
+    });
+  },
+  async deleteSchoolStudent(id) {
+    return this.request(`/schools/students/${id}`, { method: 'DELETE' });
   },
   async getSchoolResults() { return this.request('/schools/results'); },
 

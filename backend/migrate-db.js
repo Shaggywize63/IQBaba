@@ -143,6 +143,44 @@ async function migrate() {
             await connection.query('ALTER TABLE students ADD COLUMN id_card_path VARCHAR(255) DEFAULT NULL AFTER phone');
         }
 
+        const [hasStudentCity] = await connection.query('SHOW COLUMNS FROM students LIKE "city"');
+        if (hasStudentCity.length === 0) {
+            console.log('Adding city column to students table...');
+            await connection.query('ALTER TABLE students ADD COLUMN city VARCHAR(100) DEFAULT NULL AFTER board');
+        }
+
+        // Questions: question_type + widened correct_option are required for
+        // multiple-selection questions and for bulk uploads that use them.
+        const [hasQuestionType] = await connection.query('SHOW COLUMNS FROM questions LIKE "question_type"');
+        if (hasQuestionType.length === 0) {
+            console.log('Adding question_type column to questions table...');
+            await connection.query("ALTER TABLE questions ADD COLUMN question_type ENUM('Single', 'Multiple') DEFAULT 'Single' AFTER topic_id");
+        }
+
+        const [correctOptionCol] = await connection.query('SHOW COLUMNS FROM questions LIKE "correct_option"');
+        if (correctOptionCol.length > 0 && /^enum/i.test(correctOptionCol[0].Type)) {
+            console.log('Widening questions.correct_option to VARCHAR(50)...');
+            await connection.query("ALTER TABLE questions MODIFY COLUMN correct_option VARCHAR(50) NOT NULL");
+        }
+
+        const [hasTopicText] = await connection.query('SHOW COLUMNS FROM questions LIKE "topic"');
+        if (hasTopicText.length === 0) {
+            console.log('Adding topic column to questions table...');
+            await connection.query('ALTER TABLE questions ADD COLUMN topic VARCHAR(255) DEFAULT NULL AFTER topic_id');
+        }
+
+        // Indexes that back the search bars on the admin listing screens.
+        const addIndex = async (table, indexName, columns) => {
+            const [existing] = await connection.query(`SHOW INDEX FROM ${table} WHERE Key_name = ?`, [indexName]);
+            if (existing.length === 0) {
+                console.log(`Adding index ${indexName} on ${table}...`);
+                await connection.query(`ALTER TABLE ${table} ADD INDEX ${indexName} (${columns})`);
+            }
+        };
+        await addIndex('schools', 'idx_schools_city', 'city');
+        await addIndex('schools', 'idx_schools_board', 'board');
+        await addIndex('students', 'idx_students_city', 'city');
+
         console.log('Migration completed successfully!');
     } catch (error) {
         console.error('Migration failed:', error);

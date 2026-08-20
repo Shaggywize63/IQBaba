@@ -117,11 +117,18 @@
                                         <option value="Hard">Hard</option>
                                     </select>
                                 </div>
-                                <div>
-                                    <input type="text" class="form-control text-sm" placeholder="Search keyword..." style="width: 250px;">
+                                <div class="flex gap-2 items-center">
+                                    <select class="form-control text-sm" style="width: auto;" id="filterType">
+                                        <option value="">All Types</option>
+                                        <option value="Single">Single Choice</option>
+                                        <option value="Multiple">Multiple Selection</option>
+                                    </select>
+                                    <input type="text" class="form-control text-sm" id="qSearchInput" placeholder="Search question, topic or subject..." style="width: 280px;">
                                 </div>
                             </div>
                             
+                            <div id="qCount" class="text-sm text-grey mb-2"></div>
+
                             <div class="table-container shadow-none">
                                 <table id="qTable">
                                     <thead>
@@ -145,7 +152,7 @@
                             <div class="grid md:grid-cols-2 gap-8">
                                 
                                 <div>
-                                    <h4 class="mb-3">Manual Question Entry</h4>
+                                    <h4 class="mb-3" id="questionFormTitle">Manual Question Entry</h4>
                                     <form id="addQuestionForm">
                                         <div class="grid grid-cols-3 gap-2 mb-3">
                                             <div class="form-group mb-0">
@@ -202,22 +209,32 @@
                                             </div>
                                         </div>
                                         
-                                        <button type="submit" class="btn btn-primary">Save Question</button>
+                                        <div class="flex gap-2">
+                                            <button type="submit" class="btn btn-primary" id="questionSubmitBtn">Save Question</button>
+                                            <button type="button" class="btn btn-outline" id="cancelEditQuestionBtn" style="display:none;" onclick="cancelEditQuestion()">Cancel Edit</button>
+                                        </div>
                                     </form>
                                 </div>
                                 
                                 <div style="border-left: 1px solid #E5E7EB; padding-left: 2rem;">
                                     <h4 class="mb-3">Bulk Question Upload</h4>
                                     <div class="alert alert-warning mb-3">
-                                        <span class="text-sm">Please use the exact format provided in the template for bulk uploading questions. Images must be uploaded separately.</span>
+                                        <span class="text-sm">
+                                            Use the exact column order from the template. <strong>Subject</strong> must match an existing subject name or code,
+                                            <strong>Correct Answer</strong> is A/B/C/D (comma-separate them for multiple-selection questions),
+                                            and <strong>Difficulty</strong> is Easy, Medium or Hard. Images must be uploaded separately.
+                                        </span>
                                     </div>
-                                    <button class="btn btn-outline btn-block mb-4">Download Excel Template</button>
-                                    
-                                    <div style="border: 2px dashed #D1D5DB; border-radius: var(--border-radius-md); padding: 3rem; text-align: center; background: #F9FAFB;">
+                                    <button type="button" class="btn btn-outline btn-block mb-4" id="questionTemplateBtn">Download CSV Template</button>
+
+                                    <div id="questionDropzone" style="border: 2px dashed #D1D5DB; border-radius: var(--border-radius-md); padding: 3rem; text-align: center; background: #F9FAFB; cursor: pointer;">
                                         <svg width="40" height="40" fill="none" stroke="#9CA3AF" viewBox="0 0 24 24" style="margin: 0 auto 1rem;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                                        <p class="text-sm font-bold text-dark">Drag and drop Excel file</p>
-                                        <button class="btn btn-secondary mt-3" onclick="window.showNotification('Validating and Uploading...', 'success')">Upload File</button>
+                                        <p class="text-sm font-bold text-dark">Drag and drop your CSV file here</p>
+                                        <p class="text-xs text-light">or click to browse</p>
+                                        <input type="file" accept=".csv,text/csv" style="display:none;" id="questionFileInput">
                                     </div>
+                                    <div id="questionBulkPreview" class="mt-3"></div>
+                                    <button type="button" class="btn btn-primary btn-block mt-3" id="questionBulkSubmit">Upload &amp; Process</button>
                                 </div>
                                 
                             </div>
@@ -361,6 +378,7 @@
     </div>
 
     <script src="js/app.js"></script>
+    <script src="js/bulk.js"></script>
     <script src="js/api.js"></script>
     <script>
         function switchTab(tabId) {
@@ -396,7 +414,14 @@
             }
             await initData();
             loadQuestions();
+            wireQuestionFilters();
+            wireBulkUpload();
         });
+
+        function wireQuestionFilters() {
+            document.getElementById('qSearchInput').addEventListener('input', filterQuestions);
+            document.getElementById('filterType').addEventListener('change', filterQuestions);
+        }
 
         async function initData() {
             try {
@@ -594,18 +619,27 @@
         function filterQuestions() {
             const subjectId = document.getElementById('filterSubject').value;
             const difficulty = document.getElementById('filterDifficulty').value;
-            
+            const questionType = document.getElementById('filterType').value;
+            const term = document.getElementById('qSearchInput').value.trim().toLowerCase();
+
             let filtered = allQuestions;
             if (subjectId) filtered = filtered.filter(q => q.subject_id == subjectId);
             if (difficulty) filtered = filtered.filter(q => q.difficulty == difficulty);
-            
+            if (questionType) filtered = filtered.filter(q => (q.question_type || 'Single') === questionType);
+            if (term) {
+                filtered = filtered.filter(q =>
+                    [q.question_text, q.topic, q.subject_name, q.option_a, q.option_b, q.option_c, q.option_d]
+                        .some(field => String(field || '').toLowerCase().includes(term))
+                );
+            }
+
             renderQuestionsTable(filtered);
         }
 
         async function loadQuestions() {
             try {
                 allQuestions = await window.api.getAdminQuestions();
-                renderQuestionsTable(allQuestions);
+                filterQuestions();
             } catch (error) {
                 console.error(error);
                 window.showNotification('Error loading questions', 'danger');
@@ -614,8 +648,18 @@
 
         function renderQuestionsTable(questions) {
             const tbody = document.querySelector('#qTable tbody');
+            const esc = window.CSV.escapeHtml;
             tbody.innerHTML = '';
-            
+
+            document.getElementById('qCount').textContent = questions.length === allQuestions.length
+                ? `${allQuestions.length} question${allQuestions.length === 1 ? '' : 's'}`
+                : `Showing ${questions.length} of ${allQuestions.length} questions`;
+
+            if (questions.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center text-grey">${allQuestions.length === 0 ? 'No questions in the bank yet.' : 'No questions match your filters.'}</td></tr>`;
+                return;
+            }
+
             questions.forEach(q => {
                 const tr = document.createElement('tr');
                 const qTypeBadge = q.question_type === 'Multiple' ? '<span class="badge badge-purple ml-2">MSQ</span>' : '';
@@ -623,15 +667,16 @@
                     <td class="text-grey">#${q.id}</td>
                     <td>
                         <div style="max-width:300px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                            ${q.question_text} ${qTypeBadge}
+                            ${esc(q.question_text)} ${qTypeBadge}
                         </div>
-                        <div class="text-xs text-grey">${q.topic || 'No Topic'}</div>
+                        <div class="text-xs text-grey">${esc(q.topic || 'No Topic')}</div>
                     </td>
-                    <td>${q.subject_name ? q.subject_name.toUpperCase() : 'N/A'}</td>
-                    <td><span class="badge ${q.difficulty === 'Easy' ? 'badge-success' : q.difficulty === 'Medium' ? 'badge-warning' : 'badge-danger'}">${q.difficulty}</span></td>
+                    <td>${q.subject_name ? esc(q.subject_name.toUpperCase()) : 'N/A'}</td>
+                    <td><span class="badge ${q.difficulty === 'Easy' ? 'badge-success' : q.difficulty === 'Medium' ? 'badge-warning' : 'badge-danger'}">${esc(q.difficulty)}</span></td>
                     <td>
                         <div class="flex gap-2">
                             <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="viewQuestion(${q.id})">View</button>
+                            <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="editQuestion(${q.id})">Edit</button>
                             <button class="btn btn-outline text-danger" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="deleteQuestion(${q.id})">Delete</button>
                         </div>
                     </td>
@@ -659,10 +704,57 @@
             alert(`Question #${q.id}\n\n${q.question_text}\n\nA: ${q.option_a}\nB: ${q.option_b}\nC: ${q.option_c}\nD: ${q.option_d}\n\nCorrect: ${q.correct_option}\nDifficulty: ${q.difficulty}`);
         }
 
+        let editingQuestionId = null;
+
+        /** Load an existing question into the manual-entry form for editing. */
+        function editQuestion(id) {
+            const q = allQuestions.find(item => item.id === id);
+            if (!q) return;
+
+            editingQuestionId = id;
+            switchTab('addq');
+
+            const form = document.getElementById('addQuestionForm');
+            form.subjectId.value = q.subject_id;
+            updateTopicDropdown('qSubjectSelect', 'qTopicSelect');
+            form.topicId.value = q.topic_id || '';
+            form.difficulty.value = q.difficulty;
+            form.questionType.value = q.question_type || 'Single';
+            toggleOptionType();
+
+            form.text.value = q.question_text || '';
+            form.optionA.value = q.option_a || '';
+            form.optionB.value = q.option_b || '';
+            form.optionC.value = q.option_c || '';
+            form.optionD.value = q.option_d || '';
+
+            // correct_option is "A" for single answers and "A,C" for multiple.
+            const letters = String(q.correct_option || '').split(',').map(v => v.trim()).filter(Boolean);
+            form.querySelectorAll('input[name="correctAnswer"]').forEach(input => {
+                const letter = String.fromCharCode(65 + parseInt(input.value, 10));
+                input.checked = letters.includes(letter);
+            });
+
+            document.getElementById('questionFormTitle').textContent = `Edit Question #${q.id}`;
+            document.getElementById('questionSubmitBtn').textContent = 'Save Changes';
+            document.getElementById('cancelEditQuestionBtn').style.display = 'inline-flex';
+            form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function cancelEditQuestion() {
+            editingQuestionId = null;
+            const form = document.getElementById('addQuestionForm');
+            form.reset();
+            toggleOptionType();
+            document.getElementById('questionFormTitle').textContent = 'Manual Question Entry';
+            document.getElementById('questionSubmitBtn').textContent = 'Save Question';
+            document.getElementById('cancelEditQuestionBtn').style.display = 'none';
+        }
+
         document.getElementById('addQuestionForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const formData = window.serializeForm(this);
-            
+
             // Format for API
             const payload = {
                 subjectId: parseInt(formData.subjectId),
@@ -682,24 +774,93 @@
                 payload.correctAnswerIndex = radio ? parseInt(radio.value) : null;
             }
 
-            const submitBtn = this.querySelector('button[type="submit"]');
+            const submitBtn = document.getElementById('questionSubmitBtn');
+            const originalText = submitBtn.textContent;
             try {
                 submitBtn.disabled = true;
                 submitBtn.textContent = 'Saving...';
-                
-                await window.api.addAdminQuestion(payload);
-                
-                window.showNotification('Question saved successfully!', 'success');
-                this.reset();
-                switchTab('qbank'); // Corrected from 'bank' to 'qbank'
+
+                if (editingQuestionId) {
+                    await window.api.updateAdminQuestion(editingQuestionId, payload);
+                    window.showNotification('Question updated successfully!', 'success');
+                } else {
+                    await window.api.addAdminQuestion(payload);
+                    window.showNotification('Question saved successfully!', 'success');
+                }
+
+                cancelEditQuestion();
+                switchTab('qbank');
                 loadQuestions();
             } catch (error) {
                 window.showNotification(error.message || 'Failed to save question', 'danger');
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Save Question';
+                submitBtn.textContent = originalText;
             }
         });
+
+        // --- Bulk upload ------------------------------------------------------
+        const QUESTION_TEMPLATE_HEADERS = [
+            'Subject', 'Topic', 'Question Text', 'Option A', 'Option B', 'Option C', 'Option D',
+            'Question Type', 'Correct Answer', 'Difficulty'
+        ];
+        const QUESTION_TEMPLATE_SAMPLE = [
+            ['Mathematics', 'Algebra', 'What is the value of x in 2x + 6 = 14?', '2', '4', '6', '8',
+             'Single', 'B', 'Easy'],
+            ['Science', 'Optics', 'Which of the following are properties of light?', 'It travels in straight lines',
+             'It requires a medium', 'It can be reflected', 'It has mass', 'Multiple', 'A,C', 'Medium']
+        ];
+
+        function wireBulkUpload() {
+            window.setupBulkUpload({
+                templateBtn: 'questionTemplateBtn',
+                templateName: 'questions_bulk_template.csv',
+                templateHeaders: QUESTION_TEMPLATE_HEADERS,
+                templateSample: QUESTION_TEMPLATE_SAMPLE,
+                dropzone: 'questionDropzone',
+                fileInput: 'questionFileInput',
+                preview: 'questionBulkPreview',
+                submitBtn: 'questionBulkSubmit',
+                mapRow: mapQuestionRow,
+                submit: questions => window.api.bulkAddAdminQuestions(questions),
+                onSuccess: () => loadQuestions()
+            });
+        }
+
+        /**
+         * Map one normalised CSV row to the payload the bulk endpoint expects.
+         * The server does the authoritative validation; these checks just give
+         * the admin line-accurate feedback before anything is sent.
+         */
+        function mapQuestionRow(row) {
+            const subject = row.subject || row.subjectname || row.subjectcode || '';
+            const text = row.questiontext || row.question || row.text || '';
+            const correct = row.correctanswer || row.correctoption || row.answer || '';
+            const difficulty = row.difficulty || '';
+
+            if (!subject) return { error: 'Subject is required' };
+            if (!text) return { error: 'Question Text is required' };
+
+            const options = [row.optiona, row.optionb, row.optionc, row.optiond];
+            const missing = ['A', 'B', 'C', 'D'].filter((letter, idx) => !options[idx]);
+            if (missing.length > 0) return { error: `Option ${missing.join(', ')} is required` };
+
+            if (!correct) return { error: 'Correct Answer is required (A, B, C or D)' };
+            if (!difficulty) return { error: 'Difficulty is required (Easy, Medium or Hard)' };
+
+            return {
+                subject,
+                topic: row.topic || '',
+                text,
+                optionA: options[0],
+                optionB: options[1],
+                optionC: options[2],
+                optionD: options[3],
+                questionType: row.questiontype || row.type || 'Single',
+                correctOption: correct,
+                difficulty
+            };
+        }
 
         document.getElementById('examConfigForm').addEventListener('submit', async function(e) {
             e.preventDefault();

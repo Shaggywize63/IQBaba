@@ -91,10 +91,18 @@
 
             <div class="content-area">
                 <div class="glass-card" style="padding: 1.5rem;">
-                    <div class="flex justify-between items-center mb-6">
+                    <div class="flex justify-between items-center mb-4" style="flex-wrap: wrap; gap: 1rem;">
                         <h4 class="mb-0">Subject Topics</h4>
-                        <button class="btn btn-primary" onclick="openModal('addTopicModal')">+ Add New Topic</button>
+                        <div class="flex gap-2 items-center">
+                            <input type="text" class="form-control text-sm" id="searchInput" placeholder="Search topic, subject or description..." style="width: 280px;">
+                            <select class="form-control text-sm" style="width: auto;" id="filterSubject">
+                                <option value="">All Subjects</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="openAddTopicModal()">+ Add New Topic</button>
+                        </div>
                     </div>
+
+                    <div id="topicCount" class="text-sm text-grey mb-2"></div>
 
                     <div class="table-container">
                         <table id="topicsTable">
@@ -120,7 +128,7 @@
     <div class="modal-overlay" id="addTopicModal">
         <div class="modal-card">
             <div class="modal-header">
-                <h3 class="mb-0">Add New Topic</h3>
+                <h3 class="mb-0" id="topicModalTitle">Add New Topic</h3>
                 <button class="modal-close" onclick="closeModal('addTopicModal')">&times;</button>
             </div>
             <form id="addTopicForm">
@@ -140,15 +148,20 @@
                 </div>
                 <div class="flex justify-end gap-2 mt-4">
                     <button type="button" class="btn btn-outline" onclick="closeModal('addTopicModal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Topic</button>
+                    <button type="submit" class="btn btn-primary" id="topicSubmitBtn">Save Topic</button>
                 </div>
             </form>
         </div>
     </div>
 
     <script src="js/app.js"></script>
+    <script src="js/bulk.js"></script>
     <script src="js/api.js"></script>
     <script>
+        let allTopics = [];
+        let allSubjects = [];
+        let editingTopicId = null;
+
         document.addEventListener('DOMContentLoaded', () => {
             if (!window.api.getToken() || window.api.getRole() !== 'admin') {
                 window.location.href = 'admin-login.html';
@@ -156,49 +169,88 @@
             }
             loadTopics();
             loadSubjects();
+            document.getElementById('searchInput').addEventListener('input', renderTopics);
+            document.getElementById('filterSubject').addEventListener('change', renderTopics);
         });
 
         async function loadTopics() {
             try {
                 window.setTableLoading('topicsTable', true);
-                const topics = await window.api.getAdminTopics();
-                const tbody = document.querySelector('#topicsTable tbody');
-                tbody.innerHTML = '';
-                
-                topics.forEach(t => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td><span class="badge badge-outline">${t.subject_name}</span></td>
-                        <td class="font-bold">${t.name}</td>
-                        <td>${t.description || 'No description'}</td>
-                        <td>
-                            <div class="flex gap-2">
-                                <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; color: var(--danger); border-color: var(--danger);" onclick="deleteTopic(${t.id})">Delete</button>
-                            </div>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
+                allTopics = await window.api.getAdminTopics();
+                renderTopics();
             } catch (error) {
                 window.showNotification('Error loading topics', 'danger');
             }
         }
 
+        function getVisibleTopics() {
+            const term = document.getElementById('searchInput').value.trim().toLowerCase();
+            const subjectId = document.getElementById('filterSubject').value;
+
+            return allTopics.filter(t => {
+                if (subjectId && String(t.subject_id) !== subjectId) return false;
+                if (!term) return true;
+                return [t.name, t.subject_name, t.description]
+                    .some(field => String(field || '').toLowerCase().includes(term));
+            });
+        }
+
+        function renderTopics() {
+            const topics = getVisibleTopics();
+            const tbody = document.querySelector('#topicsTable tbody');
+            const esc = window.CSV ? window.CSV.escapeHtml : (v => v);
+            tbody.innerHTML = '';
+
+            document.getElementById('topicCount').textContent = topics.length === allTopics.length
+                ? `${allTopics.length} topic${allTopics.length === 1 ? '' : 's'}`
+                : `Showing ${topics.length} of ${allTopics.length} topics`;
+
+            if (topics.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center text-grey">${allTopics.length === 0 ? 'No topics found.' : 'No topics match your search.'}</td></tr>`;
+                return;
+            }
+
+            topics.forEach(t => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><span class="badge badge-outline">${esc(t.subject_name)}</span></td>
+                    <td class="font-bold">${esc(t.name)}</td>
+                    <td>${esc(t.description || 'No description')}</td>
+                    <td>
+                        <div class="flex gap-2">
+                            <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="editTopic(${t.id})">Edit</button>
+                            <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; color: var(--danger); border-color: var(--danger);" onclick="deleteTopic(${t.id})">Delete</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
         async function loadSubjects() {
             try {
-                const subjects = await window.api.getAdminSubjects();
-                const select = document.getElementById('modalSubjectSelect');
-                subjects.forEach(s => {
-                    const opt = document.createElement('option');
-                    opt.value = s.id;
-                    opt.textContent = s.name;
-                    select.appendChild(opt);
+                allSubjects = await window.api.getAdminSubjects();
+
+                // The same list feeds the modal picker and the table filter.
+                const modalSelect = document.getElementById('modalSubjectSelect');
+                const filterSelect = document.getElementById('filterSubject');
+                allSubjects.forEach(s => {
+                    const modalOpt = document.createElement('option');
+                    modalOpt.value = s.id;
+                    modalOpt.textContent = s.name;
+                    modalSelect.appendChild(modalOpt);
+
+                    const filterOpt = document.createElement('option');
+                    filterOpt.value = s.id;
+                    filterOpt.textContent = s.name;
+                    filterSelect.appendChild(filterOpt);
                 });
             } catch (error) { console.error(error); }
         }
 
         async function deleteTopic(id) {
-            if (confirm('Are you sure you want to delete this topic?')) {
+            const topic = allTopics.find(t => t.id === id);
+            if (confirm(`Delete "${topic ? topic.name : 'this topic'}"?`)) {
                 try {
                     await window.api.deleteAdminTopic(id);
                     window.showNotification('Topic deleted successfully', 'success');
@@ -209,27 +261,63 @@
             }
         }
 
+        function openAddTopicModal() {
+            editingTopicId = null;
+            document.getElementById('addTopicForm').reset();
+            document.getElementById('topicModalTitle').textContent = 'Add New Topic';
+            document.getElementById('topicSubmitBtn').textContent = 'Save Topic';
+            openModal('addTopicModal');
+        }
+
+        function editTopic(id) {
+            const topic = allTopics.find(t => t.id === id);
+            if (!topic) return;
+
+            editingTopicId = id;
+            const form = document.getElementById('addTopicForm');
+            form.subjectId.value = topic.subject_id || '';
+            form.name.value = topic.name || '';
+            form.description.value = topic.description || '';
+
+            document.getElementById('topicModalTitle').textContent = `Edit ${topic.name}`;
+            document.getElementById('topicSubmitBtn').textContent = 'Save Changes';
+            openModal('addTopicModal');
+        }
+
         document.getElementById('addTopicForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const formData = window.serializeForm(this);
-            const submitBtn = this.querySelector('button[type="submit"]');
-            
+            const submitBtn = document.getElementById('topicSubmitBtn');
+            const originalText = submitBtn.textContent;
+
             try {
                 submitBtn.disabled = true;
-                await window.api.addAdminTopic(formData);
-                window.showNotification('Topic added successfully!', 'success');
+                submitBtn.textContent = 'Saving...';
+
+                if (editingTopicId) {
+                    await window.api.updateAdminTopic(editingTopicId, formData);
+                    window.showNotification('Topic updated successfully!', 'success');
+                } else {
+                    await window.api.addAdminTopic(formData);
+                    window.showNotification('Topic added successfully!', 'success');
+                }
+
                 closeModal('addTopicModal');
                 this.reset();
                 loadTopics();
             } catch (error) {
-                window.showNotification(error.message || 'Failed to add topic', 'danger');
+                window.showNotification(error.message || 'Failed to save topic', 'danger');
             } finally {
                 submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
             }
         });
 
         function openModal(id) { document.getElementById(id).classList.add('active'); }
-        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+            if (id === 'addTopicModal') editingTopicId = null;
+        }
     </script>
 </body>
 </html>

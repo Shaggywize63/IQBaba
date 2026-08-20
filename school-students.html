@@ -170,6 +170,8 @@
             position: fixed; inset: 0; background: rgba(14, 42, 71, 0.55);
             backdrop-filter: blur(6px);
             display: flex; align-items: center; justify-content: center;
+            /* Gutter keeps the modal footer clear of the viewport edge on short screens. */
+            padding: 1.5rem 1rem;
             z-index: 1000; opacity: 0; pointer-events: none;
             transition: opacity 0.3s ease;
         }
@@ -178,7 +180,7 @@
             background: white; padding: 2.2rem;
             border-radius: 28px;
             max-width: 640px; width: calc(100% - 2rem);
-            max-height: 90vh; overflow-y: auto;
+            max-height: calc(100vh - 3rem); overflow-y: auto;
             transform: translateY(20px) scale(0.96);
             transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
             border: 1px solid rgba(14,42,71,0.08);
@@ -287,12 +289,15 @@
                     <div class="toolbar">
                         <div class="search-box">
                             <svg width="16" height="16" fill="none" stroke="#0E2A47" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                            <input type="text" id="searchInput" placeholder="Search by name or username…">
+                            <input type="text" id="searchInput" placeholder="Search name, username, city or email…">
                         </div>
+                        <select class="input" style="width:auto;" id="filterClass">
+                            <option value="">All classes</option>
+                        </select>
                         <div class="actions-row">
                             <button class="pill-btn" onclick="exportStudents()">↓ Export CSV</button>
                             <button class="pill-btn" onclick="openModal('bulkModal')">↑ Bulk upload</button>
-                            <button class="pill-btn solid" onclick="openModal('addStudentModal')">+ Add student</button>
+                            <button class="pill-btn solid" onclick="openAddStudentModal()">+ Add student</button>
                         </div>
                     </div>
 
@@ -302,6 +307,7 @@
                                 <tr>
                                     <th>Name</th>
                                     <th>Class</th>
+                                    <th>City</th>
                                     <th>Username</th>
                                     <th>Status</th>
                                     <th>Actions</th>
@@ -312,14 +318,7 @@
                     </div>
 
                     <div class="pagination-bar">
-                        <span>Showing 1–3 of 342 students</span>
-                        <div class="pager">
-                            <button disabled>‹</button>
-                            <button class="active">1</button>
-                            <button>2</button>
-                            <button>3</button>
-                            <button>›</button>
-                        </div>
+                        <span id="studentCount">Loading students…</span>
                     </div>
                 </div>
             </div>
@@ -330,7 +329,7 @@
     <div class="modal-overlay" id="addStudentModal">
         <div class="modal-card">
             <div class="modal-header">
-                <h3>Add a new student</h3>
+                <h3 id="studentModalTitle">Add a new student</h3>
                 <button class="modal-close" onclick="closeModal('addStudentModal')">×</button>
             </div>
             <form id="addStudentForm">
@@ -359,16 +358,18 @@
                             <option value="State Board">State Board</option>
                         </select>
                     </div>
+                    <div class="field"><label>City</label><input type="text" name="city" class="input" placeholder="e.g. New Delhi"></div>
+                    <div class="field"><label>Phone</label><input type="text" name="phone" class="input" placeholder="9876543210"></div>
                     <div class="field" style="grid-column: span 2;"><label>Email</label><input type="email" name="email" class="input" placeholder="rahul@example.com"></div>
                 </div>
                 <div class="field">
-                    <label>Password *</label>
-                    <input type="text" name="password" class="input" value="password123" required>
-                    <span class="helper">Default is <code style="background: var(--accent-cream); padding: 0.1rem 0.4rem; border-radius: 5px;">password123</code></span>
+                    <label id="studentPasswordLabel">Password *</label>
+                    <input type="text" name="password" class="input" id="studentPasswordInput" value="password123" required>
+                    <span class="helper" id="studentPasswordHint">Default is <code style="background: var(--accent-cream); padding: 0.1rem 0.4rem; border-radius: 5px;">password123</code></span>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="pill-btn" onclick="closeModal('addStudentModal')">Cancel</button>
-                    <button type="submit" class="pill-btn solid">Save student</button>
+                    <button type="submit" class="pill-btn solid" id="studentSubmitBtn">Save student</button>
                 </div>
             </form>
         </div>
@@ -381,136 +382,293 @@
                 <h3>Bulk student upload</h3>
                 <button class="modal-close" onclick="closeModal('bulkModal')">×</button>
             </div>
-            <p style="font-family: var(--font-heading); font-weight: 600; color: var(--accent-deep); margin-bottom: 0.6rem;">1. Download the Excel template</p>
-            <button class="pill-btn" style="width: 100%; justify-content: center; margin-bottom: 1.2rem;">↓ Download template.xlsx</button>
+            <p style="font-family: var(--font-heading); font-weight: 600; color: var(--accent-deep); margin-bottom: 0.6rem;">1. Download the CSV template</p>
+            <p style="font-size: 0.8rem; color: var(--text-grey); margin-bottom: 0.6rem;">
+                Fill one row per student in Excel or Google Sheets, then save as CSV.
+                <strong>Full Name</strong>, <strong>Username</strong>, <strong>Class</strong> and <strong>Board</strong> are required —
+                every student is added to your own school. Leave Password blank to use <strong>password123</strong>.
+            </p>
+            <button type="button" class="pill-btn" style="width: 100%; justify-content: center; margin-bottom: 1.2rem;" id="studentTemplateBtn">↓ Download template.csv</button>
 
             <p style="font-family: var(--font-heading); font-weight: 600; color: var(--accent-deep); margin-bottom: 0.6rem;">2. Upload your filled file</p>
-            <div class="dropzone">
+            <div class="dropzone" id="studentDropzone" style="cursor: pointer;">
                 <div class="ic">⬆</div>
-                <div class="t">Drag &amp; drop your Excel file here</div>
+                <div class="t">Drag &amp; drop your CSV file here</div>
                 <div class="s">…or click to browse</div>
-                <input type="file" style="display:none;" id="fileUpload">
+                <input type="file" accept=".csv,text/csv" style="display:none;" id="studentFileInput">
             </div>
+            <div id="studentBulkPreview" style="margin-top: 0.9rem;"></div>
 
             <div class="modal-footer">
                 <button type="button" class="pill-btn" onclick="closeModal('bulkModal')">Cancel</button>
-                <button type="button" class="pill-btn solid" onclick="handleFormSubmit(event, 'bulkModal', 'File uploaded successfully!')">Upload &amp; process</button>
+                <button type="button" class="pill-btn solid" id="studentBulkSubmit">Upload &amp; process</button>
             </div>
         </div>
     </div>
 
     <script src="js/app.js"></script>
+    <script src="js/bulk.js"></script>
     <script src="js/api.js"></script>
     <script>
+        const STUDENT_TEMPLATE_HEADERS = ['Full Name', 'Username', 'Class', 'Board', 'City', 'Email', 'Phone', 'Status', 'Password'];
+        const STUDENT_TEMPLATE_SAMPLE = [
+            ['Rahul Sharma', 'rahul123', '8', 'CBSE', 'New Delhi', 'rahul@example.com', '9876543210', 'Active', ''],
+            ['Ananya Iyer', 'ananya.iyer', 'Class 10', 'ICSE', 'Bengaluru', 'ananya@example.com', '9812345670', 'Active', '']
+        ];
+
+        let allStudents = [];
+        let editingStudentId = null;
+
         document.addEventListener('DOMContentLoaded', () => {
             if (!window.api.getToken() || window.api.getRole() !== 'school') {
                 window.location.href = 'school-login.html';
                 return;
             }
             loadStudents();
+            wireFilters();
+            wireBulkUpload();
         });
 
+        // --- Search & filters -------------------------------------------------
+        function wireFilters() {
+            document.getElementById('searchInput').addEventListener('input', renderStudents);
+            document.getElementById('filterClass').addEventListener('change', renderStudents);
+        }
+
+        function refreshFilterOptions() {
+            const select = document.getElementById('filterClass');
+            const current = select.value;
+            const levels = [...new Set(allStudents.map(s => String(s.class_level || '').trim()).filter(Boolean))]
+                .sort((a, b) => Number(a) - Number(b));
+
+            select.innerHTML = '<option value="">All classes</option>';
+            levels.forEach(level => {
+                const opt = document.createElement('option');
+                opt.value = level;
+                opt.textContent = `Class ${level}`;
+                select.appendChild(opt);
+            });
+            if (levels.includes(current)) select.value = current;
+        }
+
+        function getVisibleStudents() {
+            const term = document.getElementById('searchInput').value.trim().toLowerCase();
+            const classLevel = document.getElementById('filterClass').value;
+
+            return allStudents.filter(s => {
+                if (classLevel && String(s.class_level) !== classLevel) return false;
+                if (!term) return true;
+                return [s.full_name, s.username, s.email, s.phone, s.city, s.board]
+                    .some(field => String(field || '').toLowerCase().includes(term));
+            });
+        }
+
+        // --- Table ------------------------------------------------------------
         async function loadStudents() {
             try {
                 window.setTableLoading && window.setTableLoading('studentsTable', true);
                 const response = await window.api.getSchoolStudents();
-                const students = response.students || [];
-                const tbody = document.querySelector('#studentsTable tbody');
-                tbody.innerHTML = '';
-
-                if (students.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: var(--text-grey); padding: 2rem;">No students registered yet.</td></tr>';
-                    return;
-                }
-
-                students.forEach(student => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td style="font-weight: 700;">${student.full_name}</td>
-                        <td>Class ${student.class_level}</td>
-                        <td><code style="font-family: 'JetBrains Mono', ui-monospace, monospace; background: var(--accent-cream); padding: 0.2rem 0.55rem; border-radius: 6px; font-size: 0.85rem;">${student.username}</code></td>
-                        <td><span class="badge-pill">Active</span></td>
-                        <td>
-                            <div class="row-actions">
-                                <button class="icon-btn" title="View" onclick="viewStudent(${student.id})">👁</button>
-                                <button class="icon-btn" title="Edit" onclick="editStudent(${student.id})">✎</button>
-                                <button class="icon-btn danger" title="Delete" onclick="deleteStudent(${student.id})">🗑</button>
-                            </div>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
+                allStudents = response.students || [];
+                refreshFilterOptions();
+                renderStudents();
             } catch (error) {
                 console.error(error);
                 window.showNotification('Error loading students', 'danger');
             }
         }
 
-        async function exportStudents() {
-            try {
-                const response = await window.api.getSchoolStudents();
-                const students = response.students || [];
-                if (students.length === 0) { window.showNotification('No data to export', 'warning'); return; }
+        function renderStudents() {
+            const students = getVisibleStudents();
+            const tbody = document.querySelector('#studentsTable tbody');
+            tbody.innerHTML = '';
 
-                const headers = ['Name', 'Class', 'Username', 'Email', 'Board', 'Registration Date'];
-                const csvRows = [headers.join(',')];
-                students.forEach(s => {
-                    csvRows.push([
-                        `"${s.full_name}"`, `"${s.class_level}"`, `"${s.username}"`,
-                        `"${s.email || ''}"`, `"${s.board || ''}"`,
-                        `"${new Date(s.registration_date).toLocaleDateString()}"`
-                    ].join(','));
-                });
+            document.getElementById('studentCount').textContent = allStudents.length === 0
+                ? 'No students yet'
+                : `Showing ${students.length} of ${allStudents.length} students`;
 
-                const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.setAttribute('href', url);
-                a.setAttribute('download', `school_students_export_${new Date().getTime()}.csv`);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                window.showNotification('Data exported successfully!', 'success');
-            } catch (error) {
-                window.showNotification('Export failed', 'danger');
+            if (students.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--text-grey); padding: 2rem;">${allStudents.length === 0 ? 'No students registered yet.' : 'No students match your search.'}</td></tr>`;
+                return;
             }
+
+            const esc = window.CSV.escapeHtml;
+
+            students.forEach(student => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-weight: 700;">${esc(student.full_name)}</td>
+                    <td>Class ${esc(student.class_level)}</td>
+                    <td>${esc(student.city || '—')}</td>
+                    <td><code style="font-family: 'JetBrains Mono', ui-monospace, monospace; background: var(--accent-cream); padding: 0.2rem 0.55rem; border-radius: 6px; font-size: 0.85rem;">${esc(student.username)}</code></td>
+                    <td><span class="badge-pill">${esc(student.status || 'Active')}</span></td>
+                    <td>
+                        <div class="row-actions">
+                            <button class="icon-btn" title="Edit" onclick="editStudent(${student.id})">✎</button>
+                            <button class="icon-btn danger" title="Delete" onclick="deleteStudent(${student.id})">🗑</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
         }
 
         async function deleteStudent(id) {
-            if (confirm('Are you sure you want to delete this student?')) {
-                window.showNotification('Student deleted successfully (Simulated)', 'success');
+            const student = allStudents.find(s => s.id === id);
+            if (!confirm(`Delete ${student ? student.full_name : 'this student'}? This cannot be undone.`)) return;
+
+            try {
+                await window.api.deleteSchoolStudent(id);
+                window.showNotification('Student deleted successfully', 'success');
                 loadStudents();
+            } catch (error) {
+                window.showNotification(error.message || 'Failed to delete student', 'danger');
             }
         }
 
-        function editStudent(id) { window.showNotification('Edit functionality coming soon!', 'info'); }
-        function viewStudent(id) { window.showNotification('Viewing student details…', 'info'); }
-        function openModal(id) { document.getElementById(id).classList.add('active'); }
-        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-        function handleFormSubmit(e, modalId, msg = 'Student saved successfully!') {
-            if (e) e.preventDefault();
-            closeModal(modalId);
-            window.showNotification(msg, 'success');
+        // --- Add / Edit -------------------------------------------------------
+        function openAddStudentModal() {
+            editingStudentId = null;
+            const form = document.getElementById('addStudentForm');
+            form.reset();
+
+            document.getElementById('studentModalTitle').textContent = 'Add a new student';
+            document.getElementById('studentSubmitBtn').textContent = 'Save student';
+            document.getElementById('studentPasswordLabel').textContent = 'Password *';
+            document.getElementById('studentPasswordHint').textContent = 'Default is password123';
+            const passwordInput = document.getElementById('studentPasswordInput');
+            passwordInput.value = 'password123';
+            passwordInput.required = true;
+
+            openModal('addStudentModal');
+        }
+
+        function editStudent(id) {
+            const student = allStudents.find(s => s.id === id);
+            if (!student) return;
+
+            editingStudentId = id;
+            const form = document.getElementById('addStudentForm');
+            form.reset();
+
+            form.fullName.value = student.full_name || '';
+            form.username.value = student.username || '';
+            form.studentClass.value = String(student.class_level || '');
+            form.board.value = student.board || '';
+            form.city.value = student.city || '';
+            form.phone.value = student.phone || '';
+            form.email.value = student.email || '';
+
+            document.getElementById('studentModalTitle').textContent = `Edit ${student.full_name}`;
+            document.getElementById('studentSubmitBtn').textContent = 'Save changes';
+            document.getElementById('studentPasswordLabel').textContent = 'Reset password';
+            document.getElementById('studentPasswordHint').textContent = 'Leave blank to keep the current password';
+            const passwordInput = document.getElementById('studentPasswordInput');
+            passwordInput.value = '';
+            passwordInput.required = false;
+
+            openModal('addStudentModal');
         }
 
         document.getElementById('addStudentForm').addEventListener('submit', async function (e) {
             e.preventDefault();
             const formData = window.serializeForm(this);
-            const submitBtn = this.querySelector('button[type="submit"]');
+            const submitBtn = document.getElementById('studentSubmitBtn');
+            const originalText = submitBtn.textContent;
+
             try {
                 submitBtn.disabled = true;
                 submitBtn.textContent = 'Saving…';
-                await window.api.addSchoolStudent(formData);
-                window.showNotification('Student created successfully!', 'success');
+
+                if (editingStudentId) {
+                    await window.api.updateSchoolStudent(editingStudentId, formData);
+                    window.showNotification('Student updated successfully!', 'success');
+                } else {
+                    await window.api.addSchoolStudent(formData);
+                    window.showNotification('Student created successfully!', 'success');
+                }
+
                 closeModal('addStudentModal');
+                editingStudentId = null;
                 this.reset();
                 loadStudents();
             } catch (error) {
-                window.showNotification(error.message || 'Failed to create student', 'danger');
+                window.showNotification(error.message || 'Failed to save student', 'danger');
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Save student';
+                submitBtn.textContent = originalText;
             }
         });
+
+        // --- Bulk upload ------------------------------------------------------
+        function wireBulkUpload() {
+            window.setupBulkUpload({
+                templateBtn: 'studentTemplateBtn',
+                templateName: 'students_bulk_template.csv',
+                templateHeaders: STUDENT_TEMPLATE_HEADERS,
+                templateSample: STUDENT_TEMPLATE_SAMPLE,
+                dropzone: 'studentDropzone',
+                fileInput: 'studentFileInput',
+                preview: 'studentBulkPreview',
+                submitBtn: 'studentBulkSubmit',
+                modal: 'bulkModal',
+                mapRow: mapStudentRow,
+                submit: students => window.api.bulkAddSchoolStudents(students),
+                onSuccess: () => loadStudents()
+            });
+        }
+
+        function mapStudentRow(row) {
+            const fullName = row.fullname || row.name || '';
+            const username = row.username || '';
+            const classLevel = row.class || row.classlevel || '';
+            const board = row.board || '';
+
+            if (!fullName) return { error: 'Full Name is required' };
+            if (!username) return { error: 'Username is required' };
+            if (!classLevel) return { error: 'Class is required' };
+            if (!board) return { error: 'Board is required' };
+
+            return {
+                fullName,
+                username,
+                classLevel,
+                board,
+                city: row.city || '',
+                email: row.email || '',
+                phone: row.phone || '',
+                status: row.status || '',
+                password: row.password || ''
+            };
+        }
+
+        // --- Export -----------------------------------------------------------
+        async function exportStudents() {
+            try {
+                const students = getVisibleStudents();
+                if (students.length === 0) {
+                    window.showNotification('No data to export', 'danger');
+                    return;
+                }
+
+                const headers = ['Full Name', 'Username', 'Class', 'Board', 'City', 'Email', 'Phone', 'Status', 'Registration Date'];
+                const rows = students.map(s => [
+                    s.full_name, s.username, s.class_level, s.board || '', s.city || '',
+                    s.email || '', s.phone || '', s.status || '',
+                    s.registration_date ? new Date(s.registration_date).toLocaleDateString() : ''
+                ]);
+
+                window.CSV.download(`school_students_export_${new Date().getTime()}.csv`, window.CSV.build(headers, rows));
+                window.showNotification(`${students.length} student(s) exported`, 'success');
+            } catch (error) {
+                window.showNotification('Export failed', 'danger');
+            }
+        }
+
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+            if (id === 'addStudentModal') editingStudentId = null;
+        }
     </script>
 </body>
 </html>

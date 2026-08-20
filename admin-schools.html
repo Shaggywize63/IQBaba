@@ -98,18 +98,37 @@
                 <div class="glass-card" style="padding: 1.5rem;">
                     
                     <div class="table-controls">
-                        <div class="search-box">
-                            <svg width="16" height="16" fill="none" stroke="#6B7280" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                            <input type="text" placeholder="Search school name...">
+                        <div class="flex gap-2 items-center flex-wrap">
+                            <div class="search-box">
+                                <svg width="16" height="16" fill="none" stroke="#6B7280" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                <input type="text" id="searchInput" placeholder="Search name, code, city, contact or email...">
+                            </div>
+                            <select class="form-control text-sm" style="width:auto;" id="filterBoard">
+                                <option value="">All Boards</option>
+                            </select>
+                            <select class="form-control text-sm" style="width:auto;" id="filterCity">
+                                <option value="">All Cities</option>
+                            </select>
+                            <select class="form-control text-sm" style="width:auto;" id="filterStatus">
+                                <option value="">All Statuses</option>
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                            </select>
                         </div>
                         <div class="flex gap-2">
                             <button class="btn btn-outline" onclick="exportSchools()">
                                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right:0.5rem;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                                 Export CSV
                             </button>
-                            <button class="btn btn-primary" onclick="openModal('addSchoolModal')">+ Add School</button>
+                            <button class="btn btn-outline" onclick="openModal('bulkSchoolModal')">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right:0.5rem;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                Bulk Upload
+                            </button>
+                            <button class="btn btn-primary" onclick="openAddSchoolModal()">+ Add School</button>
                         </div>
                     </div>
+
+                    <div id="schoolCount" class="text-sm text-grey mb-2"></div>
 
                     <div class="table-container">
                         <table id="schoolsTable">
@@ -139,18 +158,22 @@
         </main>
     </div>
 
-    <!-- Add School Modal -->
+    <!-- Add / Edit School Modal -->
     <div class="modal-overlay" id="addSchoolModal">
         <div class="modal-card">
             <div class="modal-header">
-                <h3 class="mb-0">Add New School</h3>
+                <h3 class="mb-0" id="schoolModalTitle">Add New School</h3>
                 <button class="modal-close" onclick="closeModal('addSchoolModal')">&times;</button>
             </div>
             <form id="addSchoolForm">
                 <div class="grid md:grid-cols-2 gap-4">
-                    <div class="form-group md:col-span-2">
+                    <div class="form-group">
                         <label class="form-label">School Name *</label>
                         <input type="text" name="name" class="form-control" placeholder="e.g. Delhi Public School" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">School Code</label>
+                        <input type="text" name="code" class="form-control" placeholder="Auto-generated if left blank">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Contact Person *</label>
@@ -213,74 +236,189 @@
                 <!-- Portal Credentials -->
                 <h4 class="mt-4 mb-2" style="font-size: 1.1rem; color: var(--text-dark);">Portal Credentials</h4>
                 <div style="padding: 1.5rem; background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: var(--border-radius-md);">
-                    <p class="text-xs text-light mb-0">Initial password will be set to: <strong>school123</strong>. Instruct the school admin to change it upon first login.</p>
+                    <p class="text-xs text-light mb-2" id="schoolPasswordHint">Initial password will be set to: <strong>school123</strong>. Instruct the school admin to change it upon first login.</p>
+                    <div class="form-group mb-0" id="schoolPasswordGroup" style="display:none;">
+                        <label class="form-label">Reset Password</label>
+                        <input type="text" name="password" class="form-control" placeholder="Leave blank to keep the current password">
+                    </div>
                 </div>
 
                 <div class="flex justify-end gap-2 mt-4">
                     <button type="button" class="btn btn-outline" onclick="closeModal('addSchoolModal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save & Create Account</button>
+                    <button type="submit" class="btn btn-primary" id="schoolSubmitBtn">Save &amp; Create Account</button>
                 </div>
             </form>
         </div>
     </div>
 
+
+    <!-- Bulk School Upload Modal -->
+    <div class="modal-overlay" id="bulkSchoolModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 class="mb-0">Bulk School Upload</h3>
+                <button class="modal-close" onclick="closeModal('bulkSchoolModal')">&times;</button>
+            </div>
+
+            <p class="font-bold mb-2">1. Download the CSV template</p>
+            <p class="text-xs text-grey mb-2">Open it in Excel or Google Sheets, fill one row per school, then save it back as CSV. <strong>School Name</strong> and <strong>Email</strong> are required; the school code is generated automatically when left blank.</p>
+            <button type="button" class="btn btn-outline btn-block mb-4" id="schoolTemplateBtn">Download CSV Template</button>
+
+            <p class="font-bold mb-2">2. Upload the filled file</p>
+            <div id="schoolDropzone" style="border: 2px dashed #D1D5DB; border-radius: var(--border-radius-md); padding: 2rem; text-align: center; background: #F9FAFB; cursor: pointer;">
+                <svg width="40" height="40" fill="none" stroke="#9CA3AF" viewBox="0 0 24 24" style="margin: 0 auto 1rem;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                <p class="text-sm font-bold text-dark">Drag and drop your CSV file here</p>
+                <p class="text-xs text-light">or click to browse</p>
+                <input type="file" accept=".csv,text/csv" style="display:none;" id="schoolFileInput">
+            </div>
+            <div id="schoolBulkPreview" class="mt-3"></div>
+
+            <div class="flex justify-end gap-2 mt-4">
+                <button type="button" class="btn btn-outline" onclick="closeModal('bulkSchoolModal')">Cancel</button>
+                <button type="button" class="btn btn-primary" id="schoolBulkSubmit">Upload &amp; Process</button>
+            </div>
+        </div>
+    </div>
+
     <script src="js/app.js"></script>
+    <script src="js/bulk.js"></script>
     <script src="js/api.js"></script>
     <script>
+        // CSV template shown in the bulk-upload modal. Header order matches the
+        // keys expected by mapSchoolRow() below.
+        const SCHOOL_TEMPLATE_HEADERS = [
+            'School Name', 'School Code', 'Contact Person', 'Email', 'Phone',
+            'Board', 'City', 'Address', 'Classes', 'Subjects', 'Student Strength', 'Status', 'Password'
+        ];
+        const SCHOOL_TEMPLATE_SAMPLE = [
+            ['Delhi Public School', '', 'Mr. Sharma', 'admin@dps.edu', '9876543210', 'CBSE', 'New Delhi',
+             '12 Mathura Road, New Delhi', 'Class 6,Class 7,Class 8', 'Mathematics,Science,English', '500', 'Active', ''],
+            ['National Public School', 'SCH-NAT-1042', 'Ms. Iyer', 'office@nps.edu', '9812345670', 'ICSE', 'Bengaluru',
+             '45 MG Road, Bengaluru', 'Class 9,Class 10', 'Mathematics,Science', '820', 'Active', '']
+        ];
+
+        let allSchools = [];
+        let editingSchoolId = null;
+
         document.addEventListener('DOMContentLoaded', () => {
             if (!window.api.getToken() || window.api.getRole() !== 'admin') {
                 window.location.href = 'admin-login.html';
                 return;
             }
             loadSchools();
+            wireFilters();
+            wireBulkUpload();
         });
 
+        // --- Search & filters -------------------------------------------------
+        function wireFilters() {
+            document.getElementById('searchInput').addEventListener('input', renderSchools);
+            document.getElementById('filterBoard').addEventListener('change', renderSchools);
+            document.getElementById('filterCity').addEventListener('change', renderSchools);
+            document.getElementById('filterStatus').addEventListener('change', renderSchools);
+        }
+
+        /** Rebuild the board/city dropdowns from whatever is actually in the data. */
+        function refreshFilterOptions() {
+            const fill = (selectId, values, allLabel) => {
+                const select = document.getElementById(selectId);
+                const current = select.value;
+                select.innerHTML = `<option value="">${allLabel}</option>`;
+                values.forEach(value => {
+                    const opt = document.createElement('option');
+                    opt.value = value;
+                    opt.textContent = value;
+                    select.appendChild(opt);
+                });
+                // Keep the admin's current choice if it still exists.
+                if (values.includes(current)) select.value = current;
+            };
+
+            const unique = key => [...new Set(allSchools.map(s => (s[key] || '').trim()).filter(Boolean))]
+                .sort((a, b) => a.localeCompare(b));
+
+            fill('filterBoard', unique('board'), 'All Boards');
+            fill('filterCity', unique('city'), 'All Cities');
+        }
+
+        function getVisibleSchools() {
+            const term = document.getElementById('searchInput').value.trim().toLowerCase();
+            const board = document.getElementById('filterBoard').value;
+            const city = document.getElementById('filterCity').value;
+            const status = document.getElementById('filterStatus').value;
+
+            return allSchools.filter(s => {
+                if (board && (s.board || '') !== board) return false;
+                if (city && (s.city || '') !== city) return false;
+                if (status && (s.status || '') !== status) return false;
+                if (!term) return true;
+
+                return [s.name, s.code, s.contact_person, s.email, s.phone, s.board, s.city, s.address]
+                    .some(field => String(field || '').toLowerCase().includes(term));
+            });
+        }
+
+        // --- Table ------------------------------------------------------------
         async function loadSchools() {
             try {
                 window.setTableLoading('schoolsTable', true);
-                const schools = await window.api.getAdminSchools();
-                const tbody = document.querySelector('#schoolsTable tbody');
-                tbody.innerHTML = '';
-                
-                if(schools.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-grey">No schools found.</td></tr>';
-                    return;
-                }
-
-                schools.forEach(s => {
-                    const tr = document.createElement('tr');
-                    const statusClass = s.status === 'Active' ? 'badge-success' : 'badge-danger';
-                    const nextStatus = s.status === 'Active' ? 'Inactive' : 'Active';
-                    const statusBtnText = s.status === 'Active' ? 'Deactivate' : 'Activate';
-
-                    tr.innerHTML = `
-                        <td class="font-bold">${s.name}</td>
-                        <td>${s.code || 'N/A'}</td>
-                        <td>${s.contact_person || 'N/A'}</td>
-                        <td>${s.email}</td>
-                        <td>${s.phone || 'N/A'}</td>
-                        <td>${s.board || 'N/A'}</td>
-                        <td>${s.city || 'N/A'}</td>
-                        <td>${s.student_strength || 0}</td>
-                        <td><span class="badge ${statusClass}">${s.status}</span></td>
-                        <td>
-                            <div class="flex gap-2">
-                                <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="toggleSchoolStatus(${s.id}, '${nextStatus}')">${statusBtnText}</button>
-                                <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="editSchool(${s.id})">Edit</button>
-                                <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; color: var(--danger); border-color: var(--danger);" onclick="deleteSchool(${s.id})">Delete</button>
-                            </div>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
+                allSchools = await window.api.getAdminSchools();
+                refreshFilterOptions();
+                renderSchools();
             } catch (error) {
                 console.error(error);
                 window.showNotification('Error loading schools', 'danger');
             }
         }
 
+        function renderSchools() {
+            const schools = getVisibleSchools();
+            const tbody = document.querySelector('#schoolsTable tbody');
+            const countEl = document.getElementById('schoolCount');
+            tbody.innerHTML = '';
+
+            countEl.textContent = schools.length === allSchools.length
+                ? `${allSchools.length} school${allSchools.length === 1 ? '' : 's'}`
+                : `Showing ${schools.length} of ${allSchools.length} schools`;
+
+            if (schools.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="10" class="text-center text-grey">${allSchools.length === 0 ? 'No schools found.' : 'No schools match your search.'}</td></tr>`;
+                return;
+            }
+
+            const esc = window.CSV.escapeHtml;
+
+            schools.forEach(s => {
+                const tr = document.createElement('tr');
+                const statusClass = s.status === 'Active' ? 'badge-success' : 'badge-danger';
+                const nextStatus = s.status === 'Active' ? 'Inactive' : 'Active';
+                const statusBtnText = s.status === 'Active' ? 'Deactivate' : 'Activate';
+
+                tr.innerHTML = `
+                    <td class="font-bold">${esc(s.name)}</td>
+                    <td>${esc(s.code || 'N/A')}</td>
+                    <td>${esc(s.contact_person || 'N/A')}</td>
+                    <td>${esc(s.email)}</td>
+                    <td>${esc(s.phone || 'N/A')}</td>
+                    <td>${esc(s.board || 'N/A')}</td>
+                    <td>${esc(s.city || 'N/A')}</td>
+                    <td>${s.student_strength || 0}</td>
+                    <td><span class="badge ${statusClass}">${esc(s.status)}</span></td>
+                    <td>
+                        <div class="flex gap-2">
+                            <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="toggleSchoolStatus(${s.id}, '${nextStatus}')">${statusBtnText}</button>
+                            <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="editSchool(${s.id})">Edit</button>
+                            <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; color: var(--danger); border-color: var(--danger);" onclick="deleteSchool(${s.id})">Delete</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
         async function deleteSchool(id) {
-            if (confirm('Are you sure you want to delete this school? This will also affect linked students.')) {
+            const school = allSchools.find(s => s.id === id);
+            if (confirm(`Delete "${school ? school.name : 'this school'}"? Schools that still have students cannot be deleted.`)) {
                 try {
                     await window.api.deleteAdminSchool(id);
                     window.showNotification('School deleted successfully', 'success');
@@ -301,52 +439,153 @@
             }
         }
 
+        // --- Add / Edit -------------------------------------------------------
+        function setCheckboxGroup(form, name, values) {
+            const selected = String(values || '').split(',').map(v => v.trim()).filter(Boolean);
+            form.querySelectorAll(`input[name="${name}"]`).forEach(cb => {
+                cb.checked = selected.includes(cb.value);
+            });
+        }
+
+        function openAddSchoolModal() {
+            editingSchoolId = null;
+            const form = document.getElementById('addSchoolForm');
+            form.reset();
+            // form.reset() restores the checked-by-default state, which is what we want for a new school.
+            document.getElementById('schoolModalTitle').textContent = 'Add New School';
+            document.getElementById('schoolSubmitBtn').textContent = 'Save & Create Account';
+            document.getElementById('schoolPasswordGroup').style.display = 'none';
+            document.getElementById('schoolPasswordHint').style.display = 'block';
+            openModal('addSchoolModal');
+        }
+
         function editSchool(id) {
-            window.showNotification('Edit functionality coming soon!', 'info');
+            const school = allSchools.find(s => s.id === id);
+            if (!school) return;
+
+            editingSchoolId = id;
+            const form = document.getElementById('addSchoolForm');
+            form.reset();
+
+            form.name.value = school.name || '';
+            form.code.value = school.code || '';
+            form.contactPerson.value = school.contact_person || '';
+            form.email.value = school.email || '';
+            form.phone.value = school.phone || '';
+            form.board.value = school.board || '';
+            form.city.value = school.city || '';
+            form.studentStrength.value = school.student_strength || 0;
+            form.address.value = school.address || '';
+            setCheckboxGroup(form, 'classes', school.classes);
+            setCheckboxGroup(form, 'subjects', school.subjects);
+            form.password.value = '';
+
+            document.getElementById('schoolModalTitle').textContent = `Edit ${school.name}`;
+            document.getElementById('schoolSubmitBtn').textContent = 'Save Changes';
+            document.getElementById('schoolPasswordGroup').style.display = 'block';
+            document.getElementById('schoolPasswordHint').style.display = 'none';
+            openModal('addSchoolModal');
         }
 
-        function viewSchool(id) {
-            window.showNotification('Viewing school details...', 'info');
+        document.getElementById('addSchoolForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const formData = window.serializeForm(this);
+            const submitBtn = document.getElementById('schoolSubmitBtn');
+            const originalText = submitBtn.textContent;
+
+            // serializeForm collapses a single checked box to a string; the API
+            // accepts either, but normalising here keeps the payload predictable.
+            ['classes', 'subjects'].forEach(key => {
+                if (formData[key] === undefined) formData[key] = [];
+                else if (!Array.isArray(formData[key])) formData[key] = [formData[key]];
+            });
+
+            try {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Saving...';
+
+                if (editingSchoolId) {
+                    await window.api.updateAdminSchool(editingSchoolId, formData);
+                    window.showNotification('School updated successfully!', 'success');
+                } else {
+                    await window.api.addAdminSchool(formData);
+                    window.showNotification('School created successfully!', 'success');
+                }
+
+                closeModal('addSchoolModal');
+                editingSchoolId = null;
+                this.reset();
+                loadSchools();
+            } catch (error) {
+                window.showNotification(error.message || 'Failed to save school', 'danger');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
+        });
+
+        // --- Bulk upload ------------------------------------------------------
+        function wireBulkUpload() {
+            window.setupBulkUpload({
+                templateBtn: 'schoolTemplateBtn',
+                templateName: 'schools_bulk_template.csv',
+                templateHeaders: SCHOOL_TEMPLATE_HEADERS,
+                templateSample: SCHOOL_TEMPLATE_SAMPLE,
+                dropzone: 'schoolDropzone',
+                fileInput: 'schoolFileInput',
+                preview: 'schoolBulkPreview',
+                submitBtn: 'schoolBulkSubmit',
+                modal: 'bulkSchoolModal',
+                mapRow: mapSchoolRow,
+                submit: schools => window.api.bulkAddAdminSchools(schools),
+                onSuccess: () => loadSchools()
+            });
         }
 
+        /** Map one normalised CSV row to the payload the bulk endpoint expects. */
+        function mapSchoolRow(row) {
+            const name = row.schoolname || row.name || '';
+            const email = row.email || '';
+
+            if (!name) return { error: 'School Name is required' };
+            if (!email) return { error: 'Email is required' };
+
+            return {
+                name,
+                code: row.schoolcode || row.code || '',
+                contactPerson: row.contactperson || '',
+                email,
+                phone: row.phone || '',
+                board: row.board || '',
+                city: row.city || '',
+                address: row.address || '',
+                classes: row.classes || '',
+                subjects: row.subjects || '',
+                studentStrength: row.studentstrength || row.strength || '',
+                status: row.status || '',
+                password: row.password || ''
+            };
+        }
+
+        // --- Export -----------------------------------------------------------
         async function exportSchools() {
             try {
-                const schools = await window.api.getAdminSchools();
+                // Export exactly what the admin is currently looking at.
+                const schools = getVisibleSchools();
                 if (schools.length === 0) {
-                    window.showNotification('No data to export', 'warning');
+                    window.showNotification('No data to export', 'danger');
                     return;
                 }
 
-                 const headers = ['School Name', 'Code', 'Contact Person', 'Email', 'Phone', 'Board', 'City', 'Address', 'Classes', 'Subjects', 'Strength'];
-                 const csvRows = [headers.join(',')];
-                 
-                 schools.forEach(s => {
-                     const row = [
-                         `"${s.name}"`,
-                         `"${s.code || ''}"`,
-                         `"${s.contact_person || ''}"`,
-                         `"${s.email}"`,
-                         `"${s.phone || ''}"`,
-                         `"${s.board || ''}"`,
-                         `"${s.city || ''}"`,
-                         `"${s.address || ''}"`,
-                         `"${s.classes || ''}"`,
-                         `"${s.subjects || ''}"`,
-                         `"${s.student_strength || 0}"`
-                     ];
-                     csvRows.push(row.join(','));
-                 });
+                const rows = schools.map(s => [
+                    s.name, s.code || '', s.contact_person || '', s.email, s.phone || '',
+                    s.board || '', s.city || '', s.address || '', s.classes || '', s.subjects || '',
+                    s.student_strength || 0, s.status || ''
+                ]);
 
-                const csvContent = csvRows.join('\n');
-                const blob = new Blob([csvContent], { type: 'text/csv' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.setAttribute('href', url);
-                a.setAttribute('download', `schools_export_${new Date().getTime()}.csv`);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                
-                window.showNotification('Data exported successfully!', 'success');
+                const headers = ['School Name', 'School Code', 'Contact Person', 'Email', 'Phone', 'Board', 'City', 'Address', 'Classes', 'Subjects', 'Student Strength', 'Status'];
+                window.CSV.download(`schools_export_${new Date().getTime()}.csv`, window.CSV.build(headers, rows));
+                window.showNotification(`${schools.length} school(s) exported`, 'success');
             } catch (error) {
                 window.showNotification('Export failed', 'danger');
             }
@@ -357,30 +596,8 @@
         }
         function closeModal(id) {
             document.getElementById(id).classList.remove('active');
+            if (id === 'addSchoolModal') editingSchoolId = null;
         }
-
-        document.getElementById('addSchoolForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const formData = window.serializeForm(this);
-            const submitBtn = this.querySelector('button[type="submit"]');
-            
-            try {
-                submitBtn.disabled = true;
-                submitBtn.textContent = 'Saving...';
-                
-                await window.api.addAdminSchool(formData);
-                
-                window.showNotification('School created successfully!', 'success');
-                closeModal('addSchoolModal');
-                this.reset();
-                loadSchools(); // refresh table
-            } catch (error) {
-                window.showNotification(error.message || 'Failed to create school', 'danger');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Save & Create Account';
-            }
-        });
     </script>
 </body>
 </html>

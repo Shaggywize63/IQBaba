@@ -99,20 +99,34 @@
                 <div class="glass-card" style="padding: 1.5rem;">
                     
                     <div class="table-controls">
-                        <div class="search-box">
-                            <svg width="16" height="16" fill="none" stroke="#6B7280" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                            <input type="text" id="searchInput" placeholder="Search by name, username or school...">
+                        <div class="flex gap-2 items-center flex-wrap">
+                            <div class="search-box">
+                                <svg width="16" height="16" fill="none" stroke="#6B7280" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                <input type="text" id="searchInput" placeholder="Search name, username, school, city or email...">
+                            </div>
+                            <select class="form-control text-sm" style="width:auto;" id="filterSchool">
+                                <option value="">All Schools</option>
+                            </select>
+                            <select class="form-control text-sm" style="width:auto;" id="filterBoard">
+                                <option value="">All Boards</option>
+                            </select>
+                            <select class="form-control text-sm" style="width:auto;" id="filterCity">
+                                <option value="">All Cities</option>
+                            </select>
+                            <select class="form-control text-sm" style="width:auto;" id="filterClass">
+                                <option value="">All Classes</option>
+                            </select>
                         </div>
                         <div class="flex gap-2">
                             <button class="btn btn-outline" onclick="exportStudents()">
                                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right:0.5rem;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                                 Export CSV
                             </button>
-                            <button class="btn btn-outline" onclick="openModal('bulkModal')">
+                            <button class="btn btn-outline" onclick="openModal('bulkStudentModal')">
                                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right:0.5rem;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                                 Bulk Upload
                             </button>
-                            <button class="btn btn-primary" onclick="openModal('addStudentModal')">+ Add Student</button>
+                            <button class="btn btn-primary" onclick="openAddStudentModal()">+ Add Student</button>
                         </div>
                     </div>
 
@@ -123,6 +137,7 @@
                                     <th>Name</th>
                                     <th>Class</th>
                                     <th>School</th>
+                                    <th>City</th>
                                     <th>Username</th>
                                     <th>ID Card</th>
                                     <th>Status</th>
@@ -148,11 +163,11 @@
         </main>
     </div>
 
-    <!-- Add Student Modal -->
+    <!-- Add / Edit Student Modal -->
     <div class="modal-overlay" id="addStudentModal">
         <div class="modal-card">
             <div class="modal-header">
-                <h3 class="mb-0">Add New Student</h3>
+                <h3 class="mb-0" id="studentModalTitle">Add New Student</h3>
                 <button class="modal-close" onclick="closeModal('addStudentModal')">&times;</button>
             </div>
             <form id="addStudentForm">
@@ -180,6 +195,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">School *</label>
+                        <input type="text" class="form-control mb-1" id="modalSchoolSearch" placeholder="Type to filter schools..." autocomplete="off" style="font-size: 0.85rem;">
                         <select name="schoolId" class="form-control" id="modalSchoolSelect" required>
                             <option value="">Select School</option>
                         </select>
@@ -194,45 +210,60 @@
                         </select>
                     </div>
                     <div class="form-group">
+                        <label class="form-label">City</label>
+                        <input type="text" name="city" class="form-control" placeholder="e.g. New Delhi">
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">Email</label>
                         <input type="email" name="email" class="form-control" placeholder="rahul@example.com">
                     </div>
+                    <div class="form-group">
+                        <label class="form-label">Phone</label>
+                        <input type="text" name="phone" class="form-control" placeholder="9876543210">
+                    </div>
                 </div>
                 <div class="form-group mt-2">
-                    <label class="form-label">Password *</label>
-                    <input type="text" name="password" class="form-control" value="password123" required>
-                    <small class="text-grey">Default is password123</small>
+                    <label class="form-label" id="studentPasswordLabel">Password *</label>
+                    <input type="text" name="password" class="form-control" id="studentPasswordInput" value="password123" required>
+                    <small class="text-grey" id="studentPasswordHint">Default is password123</small>
                 </div>
                 <div class="flex justify-end gap-2 mt-4">
                     <button type="button" class="btn btn-outline" onclick="closeModal('addStudentModal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Student</button>
+                    <button type="submit" class="btn btn-primary" id="studentSubmitBtn">Save Student</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- Bulk Upload Modal -->
-    <div class="modal-overlay" id="bulkModal">
+    <div class="modal-overlay" id="bulkStudentModal">
         <div class="modal-card">
             <div class="modal-header">
-                <h3 class="mb-0">Bulk Student Upload</h3>
-                <button class="modal-close" onclick="closeModal('bulkModal')">&times;</button>
+                <h3 class="mb-0">Bulk Student Registration</h3>
+                <button class="modal-close" onclick="closeModal('bulkStudentModal')">&times;</button>
             </div>
-            <div class="mb-4">
-                <p>1. Download the Excel template</p>
-                <button class="btn btn-outline btn-block mb-3">Download Template.xlsx</button>
-                
-                <p>2. Upload filled Excel file</p>
-                <div style="border: 2px dashed #D1D5DB; border-radius: var(--border-radius-md); padding: 2rem; text-align: center; background: #F9FAFB;">
-                    <svg width="40" height="40" fill="none" stroke="#9CA3AF" viewBox="0 0 24 24" style="margin: 0 auto 1rem;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                    <p class="text-sm font-bold text-dark">Drag and drop your Excel file here</p>
-                    <p class="text-xs text-light">or click to browse</p>
-                    <input type="file" style="display:none;" id="fileUpload">
-                </div>
+
+            <p class="font-bold mb-2">1. Download the CSV template</p>
+            <p class="text-xs text-grey mb-2">
+                Fill one row per student in Excel or Google Sheets, then save as CSV.
+                <strong>Full Name</strong>, <strong>Username</strong>, <strong>Class</strong>, <strong>Board</strong> and <strong>School</strong> are required.
+                The School column accepts a school name, its code, or its id — an unrecognised name is stored as an unregistered school.
+                Leave Password blank to use <strong>password123</strong>.
+            </p>
+            <button type="button" class="btn btn-outline btn-block mb-4" id="studentTemplateBtn">Download CSV Template</button>
+
+            <p class="font-bold mb-2">2. Upload the filled file</p>
+            <div id="studentDropzone" style="border: 2px dashed #D1D5DB; border-radius: var(--border-radius-md); padding: 2rem; text-align: center; background: #F9FAFB; cursor: pointer;">
+                <svg width="40" height="40" fill="none" stroke="#9CA3AF" viewBox="0 0 24 24" style="margin: 0 auto 1rem;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                <p class="text-sm font-bold text-dark">Drag and drop your CSV file here</p>
+                <p class="text-xs text-light">or click to browse</p>
+                <input type="file" accept=".csv,text/csv" style="display:none;" id="studentFileInput">
             </div>
-            <div class="flex justify-end gap-2">
-                <button type="button" class="btn btn-outline" onclick="closeModal('bulkModal')">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="handleFormSubmit(event, 'bulkModal', 'File uploaded successfully!')">Upload & Process</button>
+            <div id="studentBulkPreview" class="mt-3"></div>
+
+            <div class="flex justify-end gap-2 mt-4">
+                <button type="button" class="btn btn-outline" onclick="closeModal('bulkStudentModal')">Cancel</button>
+                <button type="button" class="btn btn-primary" id="studentBulkSubmit">Upload &amp; Process</button>
             </div>
         </div>
     </div>
@@ -251,8 +282,21 @@
     </div>
 
     <script src="js/app.js"></script>
+    <script src="js/bulk.js"></script>
     <script src="js/api.js"></script>
     <script>
+        const STUDENT_TEMPLATE_HEADERS = [
+            'Full Name', 'Username', 'Class', 'School', 'Board', 'City', 'Email', 'Phone', 'Status', 'Password'
+        ];
+        const STUDENT_TEMPLATE_SAMPLE = [
+            ['Rahul Sharma', 'rahul123', '8', 'Delhi Public School', 'CBSE', 'New Delhi', 'rahul@example.com', '9876543210', 'Active', ''],
+            ['Ananya Iyer', 'ananya.iyer', 'Class 10', 'SCH-NAT-1042', 'ICSE', 'Bengaluru', 'ananya@example.com', '9812345670', 'Active', '']
+        ];
+
+        let allStudents = [];
+        let allSchools = [];
+        let editingStudentId = null;
+
         document.addEventListener('DOMContentLoaded', () => {
             if (!window.api.getToken() || window.api.getRole() !== 'admin') {
                 window.location.href = 'admin-login.html';
@@ -260,104 +304,139 @@
             }
             loadStudents();
             loadSchools();
+            wireFilters();
+            wireBulkUpload();
         });
 
+        // --- Search & filters -------------------------------------------------
+        function wireFilters() {
+            ['searchInput', 'filterSchool', 'filterBoard', 'filterCity', 'filterClass'].forEach(id => {
+                const el = document.getElementById(id);
+                el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', renderStudents);
+            });
+
+            // Type-ahead filter over the school dropdown inside the add/edit modal.
+            document.getElementById('modalSchoolSearch').addEventListener('input', function () {
+                populateModalSchools(this.value);
+            });
+        }
+
+        function schoolNameOf(student) {
+            return student.school_name || student.custom_school_name || '';
+        }
+
+        function refreshFilterOptions() {
+            const fill = (selectId, values, allLabel) => {
+                const select = document.getElementById(selectId);
+                const current = select.value;
+                select.innerHTML = `<option value="">${allLabel}</option>`;
+                values.forEach(value => {
+                    const opt = document.createElement('option');
+                    opt.value = value;
+                    opt.textContent = value;
+                    select.appendChild(opt);
+                });
+                if (values.includes(current)) select.value = current;
+            };
+
+            const unique = fn => [...new Set(allStudents.map(fn).map(v => String(v || '').trim()).filter(Boolean))];
+
+            fill('filterSchool', unique(schoolNameOf).sort((a, b) => a.localeCompare(b)), 'All Schools');
+            fill('filterBoard', unique(s => s.board).sort((a, b) => a.localeCompare(b)), 'All Boards');
+            fill('filterCity', unique(s => s.city).sort((a, b) => a.localeCompare(b)), 'All Cities');
+            fill('filterClass', unique(s => s.class_level).sort((a, b) => Number(a) - Number(b)), 'All Classes');
+        }
+
+        function getVisibleStudents() {
+            const term = document.getElementById('searchInput').value.trim().toLowerCase();
+            const school = document.getElementById('filterSchool').value;
+            const board = document.getElementById('filterBoard').value;
+            const city = document.getElementById('filterCity').value;
+            const classLevel = document.getElementById('filterClass').value;
+
+            return allStudents.filter(s => {
+                if (school && schoolNameOf(s) !== school) return false;
+                if (board && (s.board || '') !== board) return false;
+                if (city && (s.city || '') !== city) return false;
+                if (classLevel && String(s.class_level) !== classLevel) return false;
+                if (!term) return true;
+
+                return [s.full_name, s.username, schoolNameOf(s), s.email, s.phone, s.board, s.city]
+                    .some(field => String(field || '').toLowerCase().includes(term));
+            });
+        }
+
+        // --- Table ------------------------------------------------------------
         async function loadStudents() {
             try {
                 window.setTableLoading('studentsTable', true);
-                const students = await window.api.getAdminStudents();
-                const tbody = document.querySelector('#studentsTable tbody');
-                tbody.innerHTML = '';
-                
-                document.getElementById('tableEntriesCount').textContent = `Showing 1 to ${students.length} of ${students.length} entries`;
-
-                students.forEach(student => {
-                    const tr = document.createElement('tr');
-                    const statusClass = student.status === 'Active' ? 'badge-success' : 'badge-danger';
-                    const nextStatus = student.status === 'Active' ? 'Inactive' : 'Active';
-                    const statusBtnText = student.status === 'Active' ? 'Deactivate' : 'Activate';
-
-                    let schoolHtml = '';
-                    if (student.school_name) {
-                        schoolHtml = student.school_name;
-                    } else if (student.custom_school_name) {
-                        schoolHtml = `${student.custom_school_name} <span class="badge badge-warning" style="background:rgba(255, 153, 51, 0.15); color:var(--secondary-color); border:1px solid rgba(255,153,51,0.25); font-size:0.65rem; padding: 2px 6px; border-radius:4px; margin-left:4px;">Unregistered</span>`;
-                    } else {
-                        schoolHtml = 'N/A';
-                    }
-
-                    let idCardHtml = '';
-                    if (student.id_card_path) {
-                        idCardHtml = `<button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="viewIdCard('${student.full_name.replace(/'/g, "\\'")}', '${student.id_card_path}')">View ID Card</button>`;
-                    } else {
-                        idCardHtml = '<span class="text-grey text-xs">No ID Card</span>';
-                    }
-
-                    tr.innerHTML = `
-                        <td class="font-bold">${student.full_name}</td>
-                        <td>Class ${student.class_level}</td>
-                        <td>${schoolHtml}</td>
-                        <td>${student.username}</td>
-                        <td>${idCardHtml}</td>
-                        <td><span class="badge ${statusClass}">${student.status}</span></td>
-                        <td>
-                            <div class="flex gap-2">
-                                <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="toggleStudentStatus(${student.id}, '${nextStatus}')">${statusBtnText}</button>
-                                <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="editStudent(${student.id})">Edit</button>
-                                <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; color: var(--danger); border-color: var(--danger);" onclick="deleteStudent(${student.id})">Delete</button>
-                            </div>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
+                allStudents = await window.api.getAdminStudents();
+                refreshFilterOptions();
+                renderStudents();
             } catch (error) {
                 console.error(error);
                 window.showNotification('Error loading students', 'danger');
             }
         }
 
-        async function exportStudents() {
-            try {
-                const students = await window.api.getAdminStudents();
-                if (students.length === 0) {
-                    window.showNotification('No data to export', 'warning');
-                    return;
+        function renderStudents() {
+            const students = getVisibleStudents();
+            const tbody = document.querySelector('#studentsTable tbody');
+            tbody.innerHTML = '';
+
+            document.getElementById('tableEntriesCount').textContent = students.length === 0
+                ? 'Showing 0 entries'
+                : `Showing 1 to ${students.length} of ${allStudents.length} entries`;
+
+            if (students.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center text-grey">${allStudents.length === 0 ? 'No students found.' : 'No students match your search.'}</td></tr>`;
+                return;
+            }
+
+            const esc = window.CSV.escapeHtml;
+
+            students.forEach(student => {
+                const tr = document.createElement('tr');
+                const statusClass = student.status === 'Active' ? 'badge-success' : 'badge-danger';
+                const nextStatus = student.status === 'Active' ? 'Inactive' : 'Active';
+                const statusBtnText = student.status === 'Active' ? 'Deactivate' : 'Activate';
+
+                let schoolHtml;
+                if (student.school_name) {
+                    schoolHtml = esc(student.school_name);
+                } else if (student.custom_school_name) {
+                    schoolHtml = `${esc(student.custom_school_name)} <span class="badge badge-warning" style="background:rgba(255, 153, 51, 0.15); color:var(--secondary-color); border:1px solid rgba(255,153,51,0.25); font-size:0.65rem; padding: 2px 6px; border-radius:4px; margin-left:4px;">Unregistered</span>`;
+                } else {
+                    schoolHtml = 'N/A';
                 }
 
-                // Create CSV content
-                const headers = ['Name', 'Class', 'School', 'Username', 'Email', 'Board', 'Registration Date'];
-                const csvRows = [headers.join(',')];
-                
-                students.forEach(s => {
-                    const row = [
-                        `"${s.full_name}"`,
-                        `"${s.class_level}"`,
-                        `"${s.school_name || ''}"`,
-                        `"${s.username}"`,
-                        `"${s.email || ''}"`,
-                        `"${s.board || ''}"`,
-                        `"${new Date(s.registration_date).toLocaleDateString()}"`
-                    ];
-                    csvRows.push(row.join(','));
-                });
+                const idCardHtml = student.id_card_path
+                    ? `<button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="viewIdCard(${student.id})">View ID Card</button>`
+                    : '<span class="text-grey text-xs">No ID Card</span>';
 
-                const csvContent = csvRows.join('\n');
-                const blob = new Blob([csvContent], { type: 'text/csv' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.setAttribute('href', url);
-                a.setAttribute('download', `students_export_${new Date().getTime()}.csv`);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                
-                window.showNotification('Data exported successfully!', 'success');
-            } catch (error) {
-                window.showNotification('Export failed', 'danger');
-            }
+                tr.innerHTML = `
+                    <td class="font-bold">${esc(student.full_name)}</td>
+                    <td>Class ${esc(student.class_level)}</td>
+                    <td>${schoolHtml}</td>
+                    <td>${esc(student.city || 'N/A')}</td>
+                    <td>${esc(student.username)}</td>
+                    <td>${idCardHtml}</td>
+                    <td><span class="badge ${statusClass}">${esc(student.status)}</span></td>
+                    <td>
+                        <div class="flex gap-2">
+                            <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="toggleStudentStatus(${student.id}, '${nextStatus}')">${statusBtnText}</button>
+                            <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="editStudent(${student.id})">Edit</button>
+                            <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; color: var(--danger); border-color: var(--danger);" onclick="deleteStudent(${student.id})">Delete</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
         }
 
         async function deleteStudent(id) {
-            if (confirm('Are you sure you want to delete this student?')) {
+            const student = allStudents.find(s => s.id === id);
+            if (confirm(`Delete ${student ? student.full_name : 'this student'}? This cannot be undone.`)) {
                 try {
                     await window.api.deleteAdminStudent(id);
                     window.showNotification('Student deleted successfully', 'success');
@@ -378,50 +457,217 @@
             }
         }
 
-        function editStudent(id) {
-            window.showNotification('Edit functionality coming soon!', 'info');
+        // --- Add / Edit -------------------------------------------------------
+        async function loadSchools() {
+            try {
+                allSchools = await window.api.getAdminSchools();
+                populateModalSchools('');
+            } catch (error) {
+                console.error(error);
+            }
         }
 
-        function viewIdCard(studentName, idCardPath) {
-            document.getElementById('idCardModalTitle').textContent = `${studentName}'s ID Card`;
+        /** Fill the modal's school dropdown, optionally narrowed by a search term. */
+        function populateModalSchools(term, selectedId) {
+            const select = document.getElementById('modalSchoolSelect');
+            const keep = selectedId !== undefined ? String(selectedId || '') : select.value;
+            const needle = String(term || '').trim().toLowerCase();
+
+            const matches = allSchools.filter(school => {
+                if (!needle) return true;
+                // Always keep the currently selected school visible so it is not silently cleared.
+                if (String(school.id) === keep) return true;
+                return [school.name, school.code, school.city, school.board]
+                    .some(field => String(field || '').toLowerCase().includes(needle));
+            });
+
+            select.innerHTML = '<option value="">Select School</option>';
+            matches.forEach(school => {
+                const option = document.createElement('option');
+                option.value = school.id;
+                option.textContent = school.city ? `${school.name} — ${school.city}` : school.name;
+                select.appendChild(option);
+            });
+
+            if (keep && matches.some(school => String(school.id) === keep)) select.value = keep;
+        }
+
+        function openAddStudentModal() {
+            editingStudentId = null;
+            const form = document.getElementById('addStudentForm');
+            form.reset();
+            document.getElementById('modalSchoolSearch').value = '';
+            populateModalSchools('', '');
+
+            document.getElementById('studentModalTitle').textContent = 'Add New Student';
+            document.getElementById('studentSubmitBtn').textContent = 'Save Student';
+            document.getElementById('studentPasswordLabel').textContent = 'Password *';
+            document.getElementById('studentPasswordHint').textContent = 'Default is password123';
+            const passwordInput = document.getElementById('studentPasswordInput');
+            passwordInput.value = 'password123';
+            passwordInput.required = true;
+            openModal('addStudentModal');
+        }
+
+        function editStudent(id) {
+            const student = allStudents.find(s => s.id === id);
+            if (!student) return;
+
+            editingStudentId = id;
+            const form = document.getElementById('addStudentForm');
+            form.reset();
+
+            form.fullName.value = student.full_name || '';
+            form.username.value = student.username || '';
+            form.studentClass.value = String(student.class_level || '');
+            form.board.value = student.board || '';
+            form.city.value = student.city || '';
+            form.email.value = student.email || '';
+            form.phone.value = student.phone || '';
+
+            document.getElementById('modalSchoolSearch').value = '';
+            populateModalSchools('', student.school_id || '');
+
+            document.getElementById('studentModalTitle').textContent = `Edit ${student.full_name}`;
+            document.getElementById('studentSubmitBtn').textContent = 'Save Changes';
+            document.getElementById('studentPasswordLabel').textContent = 'Reset Password';
+            document.getElementById('studentPasswordHint').textContent = 'Leave blank to keep the current password';
+            const passwordInput = document.getElementById('studentPasswordInput');
+            passwordInput.value = '';
+            passwordInput.required = false;
+
+            openModal('addStudentModal');
+        }
+
+        document.getElementById('addStudentForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const formData = window.serializeForm(this);
+            const submitBtn = document.getElementById('studentSubmitBtn');
+            const originalText = submitBtn.textContent;
+
+            try {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Saving...';
+
+                if (editingStudentId) {
+                    const current = allStudents.find(s => s.id === editingStudentId);
+                    // Preserve the free-text school name when the student is still unregistered.
+                    formData.customSchoolName = current ? current.custom_school_name : null;
+                    await window.api.updateAdminStudent(editingStudentId, formData);
+                    window.showNotification('Student updated successfully!', 'success');
+                } else {
+                    await window.api.addAdminStudent(formData);
+                    window.showNotification('Student created successfully!', 'success');
+                }
+
+                closeModal('addStudentModal');
+                editingStudentId = null;
+                this.reset();
+                loadStudents();
+            } catch (error) {
+                window.showNotification(error.message || 'Failed to save student', 'danger');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
+        });
+
+        // --- Bulk upload ------------------------------------------------------
+        function wireBulkUpload() {
+            window.setupBulkUpload({
+                templateBtn: 'studentTemplateBtn',
+                templateName: 'students_bulk_template.csv',
+                templateHeaders: STUDENT_TEMPLATE_HEADERS,
+                templateSample: STUDENT_TEMPLATE_SAMPLE,
+                dropzone: 'studentDropzone',
+                fileInput: 'studentFileInput',
+                preview: 'studentBulkPreview',
+                submitBtn: 'studentBulkSubmit',
+                modal: 'bulkStudentModal',
+                mapRow: mapStudentRow,
+                submit: students => window.api.bulkAddAdminStudents(students),
+                onSuccess: () => loadStudents()
+            });
+        }
+
+        function mapStudentRow(row) {
+            const fullName = row.fullname || row.name || '';
+            const username = row.username || '';
+            const classLevel = row.class || row.classlevel || '';
+            const board = row.board || '';
+            const school = row.school || row.schoolname || row.schoolcode || row.schoolid || '';
+
+            if (!fullName) return { error: 'Full Name is required' };
+            if (!username) return { error: 'Username is required' };
+            if (!classLevel) return { error: 'Class is required' };
+            if (!board) return { error: 'Board is required' };
+            if (!school) return { error: 'School is required' };
+
+            return {
+                fullName,
+                username,
+                classLevel,
+                board,
+                schoolName: school,
+                city: row.city || '',
+                email: row.email || '',
+                phone: row.phone || '',
+                status: row.status || '',
+                password: row.password || ''
+            };
+        }
+
+        // --- Export -----------------------------------------------------------
+        async function exportStudents() {
+            try {
+                const students = getVisibleStudents();
+                if (students.length === 0) {
+                    window.showNotification('No data to export', 'danger');
+                    return;
+                }
+
+                const headers = ['Full Name', 'Username', 'Class', 'School', 'Board', 'City', 'Email', 'Phone', 'Status', 'Registration Date'];
+                const rows = students.map(s => [
+                    s.full_name, s.username, s.class_level, schoolNameOf(s) || '', s.board || '',
+                    s.city || '', s.email || '', s.phone || '', s.status || '',
+                    s.registration_date ? new Date(s.registration_date).toLocaleDateString() : ''
+                ]);
+
+                window.CSV.download(`students_export_${new Date().getTime()}.csv`, window.CSV.build(headers, rows));
+                window.showNotification(`${students.length} student(s) exported`, 'success');
+            } catch (error) {
+                window.showNotification('Export failed', 'danger');
+            }
+        }
+
+        // --- ID card preview --------------------------------------------------
+        function viewIdCard(studentId) {
+            const student = allStudents.find(s => s.id === studentId);
+            if (!student || !student.id_card_path) return;
+
+            document.getElementById('idCardModalTitle').textContent = `${student.full_name}'s ID Card`;
             const body = document.getElementById('idCardModalBody');
             body.innerHTML = '';
-            
-            const fileExtension = idCardPath.split('.').pop().toLowerCase();
+
+            const fileExtension = student.id_card_path.split('.').pop().toLowerCase();
             if (fileExtension === 'pdf') {
                 const iframe = document.createElement('iframe');
-                iframe.src = idCardPath;
+                iframe.src = student.id_card_path;
                 iframe.style.width = '100%';
                 iframe.style.height = '60vh';
                 iframe.style.border = 'none';
                 body.appendChild(iframe);
             } else {
                 const img = document.createElement('img');
-                img.src = idCardPath;
+                img.src = student.id_card_path;
                 img.style.maxWidth = '100%';
                 img.style.maxHeight = '65vh';
                 img.style.objectFit = 'contain';
                 img.style.borderRadius = 'var(--border-radius-md)';
                 body.appendChild(img);
             }
-            
-            openModal('viewIdCardModal');
-        }
 
-        async function loadSchools() {
-            try {
-                const schools = await window.api.getAdminSchools();
-                const schoolSelect = document.getElementById('modalSchoolSelect');
-                schoolSelect.innerHTML = '<option value="">Select School</option>';
-                schools.forEach(school => {
-                    const option = document.createElement('option');
-                    option.value = school.id;
-                    option.textContent = school.name;
-                    schoolSelect.appendChild(option);
-                });
-            } catch (error) {
-                console.error(error);
-            }
+            openModal('viewIdCardModal');
         }
 
         function openModal(id) {
@@ -429,35 +675,8 @@
         }
         function closeModal(id) {
             document.getElementById(id).classList.remove('active');
+            if (id === 'addStudentModal') editingStudentId = null;
         }
-        function handleFormSubmit(e, modalId, msg = 'Operation successful!') {
-            if(e) e.preventDefault();
-            closeModal(modalId);
-            window.showNotification(msg, 'success');
-        }
-
-        document.getElementById('addStudentForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const formData = window.serializeForm(this);
-            const submitBtn = this.querySelector('button[type="submit"]');
-            
-            try {
-                submitBtn.disabled = true;
-                submitBtn.textContent = 'Saving...';
-                
-                await window.api.addAdminStudent(formData);
-                
-                window.showNotification('Student created successfully!', 'success');
-                closeModal('addStudentModal');
-                this.reset();
-                loadStudents();
-            } catch (error) {
-                window.showNotification(error.message || 'Failed to create student', 'danger');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Save Student';
-            }
-        });
     </script>
 </body>
 </html>
