@@ -76,8 +76,15 @@ number.
 
 ## 4. Install and start
 
-Use **Run npm install** in the Node.js panel, then **Restart**. The root
-`package.json` installs `backend/`'s dependencies for you.
+Run the install step, then restart.
+
+The dependencies are declared in the **root** `package.json`, which is where a
+platform runs `npm install`. Node resolves upward from `backend/`, so they are
+found from there. This matters: they used to live only in
+`backend/package.json`, pulled in by a `postinstall` hook, and an install run
+with `--ignore-scripts` or `npm ci` skips that hook. The install then reports
+success having installed nothing, and the app dies on
+`Cannot find module 'express'` before serving a single request.
 
 On startup the app runs `backend/migrate-db.js`, which creates any missing
 tables — including `admins`, which older databases lack.
