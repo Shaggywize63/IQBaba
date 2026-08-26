@@ -16,18 +16,35 @@ npm --version 2>&1 || echo "npm: NOT ON PATH"
 echo
 
 echo "===== did the dependencies actually install? ====="
-# The root package.json declares none; backend/ has them all, pulled in by a
-# postinstall hook. A platform that installs with --ignore-scripts or npm ci
-# skips that hook, and then the app cannot start at all.
-if [ -d backend/node_modules ]; then
-  echo "backend/node_modules: present ($(ls backend/node_modules | wc -l) packages)"
-  for m in express mysql2 bcrypt bcryptjs dotenv cors helmet jsonwebtoken; do
-    [ -d "backend/node_modules/$m" ] && echo "  ok      $m" || echo "  MISSING $m"
-  done
+# Dependencies are declared in the root package.json now, so root node_modules
+# is what matters; Node resolves upward from backend/. backend/node_modules is
+# reported too because a local install puts them there.
+for d in node_modules backend/node_modules; do
+  if [ -d "$d" ]; then echo "$d: present ($(ls "$d" | wc -l) packages)"
+  else echo "$d: absent"; fi
+done
+found=0
+for m in express mysql2 bcryptjs dotenv cors helmet jsonwebtoken; do
+  if [ -d "node_modules/$m" ] || [ -d "backend/node_modules/$m" ]; then
+    echo "  ok      $m"; found=1
+  else
+    echo "  MISSING $m"
+  fi
+done
+[ "$found" = "0" ] && echo "  Nothing installed at all - fix: npm install"
+echo
+
+echo "===== is there an entry file where the platform looks? ====="
+# Hostinger's Web App "Entry file" defaults to app.js at the project root.
+if [ -f app.js ]; then
+  echo "app.js: present -> $(grep -m1 require app.js)"
 else
-  echo "backend/node_modules: MISSING - this alone stops the app starting."
-  echo "  fix: (cd backend && npm install --omit=dev)"
+  echo "app.js: MISSING - a platform defaulting to app.js starts nothing"
 fi
+[ -f backend/server.js ] && echo "backend/server.js: present" || echo "backend/server.js: MISSING"
+[ -f package.json ] && echo "start script: $(node -p "require('./package.json').scripts.start" 2>/dev/null)"
+[ -f package-lock.json ] && echo "package-lock.json: present (npm ci will work)" \
+                        || echo "package-lock.json: absent (npm ci would fail)"
 echo
 
 echo "===== is anything listening? ====="
@@ -54,7 +71,7 @@ echo
 echo "===== start it by hand: the real error message ====="
 # The app prints [boot] as its first statement, then the port it bound and
 # where that value came from, then the database user it connected as.
-timeout 25 node backend/server.js 2>&1 | head -40
+timeout 25 node app.js 2>&1 | head -40
 echo
 echo "===== platform logs ====="
 ls -la ~/logs 2>/dev/null | head -20 || echo "(no ~/logs)"
