@@ -131,6 +131,12 @@ const api = {
   async getAdminStudents() { return this.request('/admin/students'); },
   async getAdminStudentsBySchool(schoolId) { return this.request(`/admin/students?schoolId=${schoolId}`); },
   async getAdminSchools() { return this.request('/admin/schools'); },
+  async resetStudentPasswords(studentIds) {
+    return this.request('/admin/students/reset-passwords', {
+      method: 'POST',
+      body: JSON.stringify(studentIds ? { studentIds } : {})
+    });
+  },
   async getAdminResults() { return this.request('/admin/results'); },
   async getAdminQuestions() { return this.request('/admin/questions'); },
   async getAdminExams() { return this.request('/admin/exams'); },

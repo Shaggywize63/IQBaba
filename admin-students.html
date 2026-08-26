@@ -126,6 +126,10 @@
                                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right:0.5rem;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                                 Bulk Upload
                             </button>
+                            <button class="btn btn-outline" onclick="resetPasswords()" id="resetPasswordsBtn">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right:0.5rem;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                                Reset Passwords
+                            </button>
                             <button class="btn btn-primary" onclick="openAddStudentModal()">+ Add Student</button>
                         </div>
                     </div>
@@ -619,6 +623,47 @@
                 status: row.status || '',
                 password: row.password || ''
             };
+        }
+
+        /**
+         * Students created before per-account passwords all share one, so a
+         * single leaked password is every one of them. This issues a new
+         * password to each and downloads them — they are stored only as
+         * hashes, so the download is the only copy.
+         */
+        async function resetPasswords() {
+            // Whatever the filters currently show is what gets reset, so an
+            // admin can do one class or one school rather than everyone.
+            const scope = getVisibleStudents();
+            const scoped = scope.length < allStudents.length;
+            if (scope.length === 0) {
+                window.showNotification('No students listed to reset', 'danger');
+                return;
+            }
+
+            const question = scoped
+                ? `Reset passwords for the ${scope.length} student(s) currently listed?`
+                : `Reset passwords for all ${allStudents.length} student(s)?`;
+            if (!confirm(`${question}\n\nEach gets a new random password and their current one stops working immediately. The new passwords download as a CSV — there is no other copy.`)) return;
+
+            const btn = document.getElementById('resetPasswordsBtn');
+            const original = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Resetting…';
+            try {
+                const result = await window.api.resetStudentPasswords(
+                    scoped ? scope.map(s => s.id) : null);
+                if (!result.credentials || result.credentials.length === 0) {
+                    window.showNotification(result.message || 'No students to reset', 'danger');
+                    return;
+                }
+                window.downloadCredentials(result.credentials);
+            } catch (error) {
+                window.showNotification(error.message || 'Password reset failed', 'danger');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = original;
+            }
         }
 
         // --- Export -----------------------------------------------------------
