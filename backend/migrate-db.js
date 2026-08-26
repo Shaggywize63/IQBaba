@@ -1,14 +1,23 @@
 const mysql = require('mysql2/promise');
-const bcrypt = require('bcrypt');
+const bcrypt = require('./utils/hash');
 require('dotenv').config();
 
 async function migrate() {
-    const connection = await mysql.createConnection({
-        host: process.env.DB_HOST || 'localhost',
-        user: process.env.DB_USER || 'root',
-        password: process.env.DB_PASSWORD || '',
-        database: process.env.DB_NAME || 'olympiad_portal'
-    });
+    // Connecting was outside the try below, so bad credentials or an
+    // unreachable database rejected before anything could catch it.
+    let connection;
+    try {
+        connection = await mysql.createConnection({
+            host: process.env.DB_HOST || 'localhost',
+            user: process.env.DB_USER || 'root',
+            password: process.env.DB_PASSWORD || '',
+            database: process.env.DB_NAME || 'olympiad_portal'
+        });
+    } catch (error) {
+        console.error(`Migrations skipped - could not connect to the database as ` +
+            `"${process.env.DB_USER}" on "${process.env.DB_HOST}": ${error.message}`);
+        return;
+    }
 
     console.log('Starting migrations...');
 
@@ -227,4 +236,13 @@ async function migrate() {
     }
 }
 
-migrate();
+module.exports = migrate;
+
+// `node backend/migrate-db.js` runs them; server.js calls migrate() itself
+// once the port is bound, so a database problem cannot stop the API booting.
+if (require.main === module) {
+    migrate().catch(error => {
+        console.error('Migration failed:', error.message);
+        process.exitCode = 1;
+    });
+}
