@@ -5,3 +5,7 @@ node_modules/
 .vscode/
 dist/
 build/
+
+# Database dumps from backend/backup-db.sh — never commit these
+backups/
+*.sql.gz

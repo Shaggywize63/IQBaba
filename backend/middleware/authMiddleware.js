@@ -18,14 +18,15 @@ const protect = async (req, res, next) => {
     } catch (error) {
       console.error(error);
       res.status(401);
-      next(new Error('Not authorized, token failed'));
+      // Return here: a malformed "Bearer" header leaves token undefined, and
+      // falling through would call next() a second time on the same request.
+      return next(new Error('Not authorized, token failed'));
     }
+    return;
   }
 
-  if (!token) {
-    res.status(401);
-    next(new Error('Not authorized, no token'));
-  }
+  res.status(401);
+  next(new Error('Not authorized, no token'));
 };
 
 // Role authorization middleware

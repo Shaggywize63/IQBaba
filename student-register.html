@@ -206,6 +206,9 @@
             border-radius: 0 0 16px 16px;
         }
     </style>
+    <style>
+        #credentialsOverlay.active { opacity: 1 !important; pointer-events: auto !important; }
+    </style>
 </head>
 <body>
 
@@ -298,6 +301,35 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+
+    <!-- Sign-in details shown once, after registration -->
+    <div id="credentialsOverlay" style="position:fixed; inset:0; background:rgba(14,42,71,0.6); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; padding:1.5rem 1rem; z-index:2000; opacity:0; pointer-events:none; transition:opacity 0.25s ease;">
+        <div style="background:#fff; border-radius:24px; padding:2rem; max-width:460px; width:100%; max-height:calc(100vh - 3rem); overflow-y:auto; box-shadow:0 24px 60px rgba(14,42,71,0.25);">
+            <h3 style="margin:0 0 0.5rem; font-size:1.35rem; color:#0E2A47;">You're registered</h3>
+            <p style="margin:0 0 1.25rem; color:#4B5563; font-size:0.92rem;">
+                Save these details now — you'll need them every time you sign in.
+                Your username was generated for you, so it is not your email.
+            </p>
+
+            <div style="background:#F9FAFB; border:1px solid #E5E7EB; border-radius:14px; padding:1rem 1.15rem; margin-bottom:1rem;">
+                <div style="font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:#6B7280; font-weight:700;">Username</div>
+                <div id="credUsername" style="font-family:ui-monospace, 'JetBrains Mono', monospace; font-size:1.1rem; font-weight:700; color:#0E2A47; word-break:break-all; margin-bottom:0.85rem;"></div>
+                <div style="font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:#6B7280; font-weight:700;">Password</div>
+                <div id="credPassword" style="font-family:ui-monospace, 'JetBrains Mono', monospace; font-size:1.1rem; font-weight:700; color:#0E2A47; word-break:break-all;"></div>
+            </div>
+
+            <div id="credPending" style="display:none; background:rgba(255,153,51,0.12); border:1px solid rgba(255,153,51,0.35); border-radius:12px; padding:0.8rem 1rem; margin-bottom:1rem; font-size:0.85rem; color:#8A4B08;">
+                Your school isn't registered with us yet, so an administrator needs to activate
+                your account before you can sign in. We'll review your ID card shortly.
+            </div>
+
+            <div style="display:flex; gap:0.6rem; flex-wrap:wrap; justify-content:flex-end;">
+                <button type="button" onclick="copyCredentials()" style="padding:0.7rem 1.2rem; border-radius:999px; border:1px solid #D1D5DB; background:#fff; color:#0E2A47; font-weight:600; cursor:pointer;">Copy details</button>
+                <button type="button" id="credContinue" style="padding:0.7rem 1.4rem; border-radius:999px; border:none; background:#0E2A47; color:#fff; font-weight:600; cursor:pointer;">Continue</button>
+            </div>
         </div>
     </div>
 
@@ -634,24 +666,67 @@
                 if (window.api.getToken() && window.api.getRole() === 'student') {
                     await window.api.updateStudentProfile(payload);
                     window.showNotification('Profile updated!', 'success');
-                } else {
-                    payload.password = 'password123';
-                    const response = await window.api.registerStudent(payload);
-                    if (response.status === 'Inactive') {
-                        window.showNotification('Registration successful! Account pending admin activation.', 'info');
-                        setTimeout(() => { window.location.href = 'student-login.html'; }, 3000);
-                        return;
-                    } else {
-                        window.showNotification('Welcome aboard! Registration complete.', 'success');
-                    }
+                    setTimeout(() => { window.location.href = 'student-dashboard.html'; }, 1000);
+                    return;
                 }
 
-                setTimeout(() => { window.location.href = 'student-dashboard.html'; }, 1000);
+                payload.password = 'password123';
+                const response = await window.api.registerStudent(payload);
+
+                // The username is generated server-side, so this screen is the only
+                // place the student ever sees it. Never redirect past it silently.
+                showCredentials(
+                    response.loginUsername || response.username,
+                    response.loginPassword || payload.password,
+                    response.status === 'Inactive'
+                );
             } catch (error) {
                 window.showNotification(error.message || 'Error occurred.', 'danger');
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = 'Complete registration <span class="arrow">→</span>';
             }
+        }
+
+        /**
+         * Show the generated sign-in details. The student picked neither the
+         * username nor the password, so losing this screen locks them out.
+         */
+        function showCredentials(username, password, isPending) {
+            const overlay = document.getElementById('credentialsOverlay');
+            document.getElementById('credUsername').textContent = username;
+            document.getElementById('credPassword').textContent = password;
+
+            document.getElementById('credPending').style.display = isPending ? 'block' : 'none';
+            document.getElementById('credContinue').textContent = isPending
+                ? 'Go to sign in'
+                : 'Continue to my dashboard';
+            document.getElementById('credContinue').onclick = () => {
+                window.location.href = isPending ? 'student-login.html' : 'student-dashboard.html';
+            };
+
+            overlay.classList.add('active');
+        }
+
+        function copyCredentials() {
+            const text = `IQBaba sign-in\nUsername: ${document.getElementById('credUsername').textContent}`
+                + `\nPassword: ${document.getElementById('credPassword').textContent}`;
+            const done = () => window.showNotification('Sign-in details copied', 'success');
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+            } else {
+                fallbackCopy(text, done);
+            }
+        }
+
+        function fallbackCopy(text, done) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy'); done(); } catch (e) { /* clipboard unavailable */ }
+            document.body.removeChild(ta);
         }
     </script>
 </body>
