@@ -1,8 +1,16 @@
 {
-  "name": "iqbaba-root",
+  "name": "iqbaba",
   "version": "1.0.0",
+  "description": "IQ Baba olympiad portal — static pages plus an Express/MySQL API.",
+  "main": "backend/server.js",
   "scripts": {
-    "install": "cd backend && npm install",
-    "start": "node backend/server.js"
-  }
+    "postinstall": "cd backend && npm install --omit=dev",
+    "start": "node backend/server.js",
+    "migrate": "node backend/migrate-db.js",
+    "create-admin": "node backend/create-admin.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "ISC"
 }
