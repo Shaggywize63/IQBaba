@@ -59,23 +59,39 @@ app.get('/', (req, res) => {
 // Static files (from the root directory)
 app.use(express.static(staticPath));
 
-// API Routes
-app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/exams', require('./routes/examRoutes'));
-app.use('/api/admin', require('./routes/adminRoutes'));
-app.use('/api/schools', require('./routes/schoolRoutes'));
-app.use('/api/students', require('./routes/studentRoutes'));
-app.use('/api/support', require('./routes/supportRoutes'));
+// API Routes. Built as one router so it can be mounted under BASE_PATH as well
+// as at the root: the pages derive their API URL from their own location, so a
+// deployment under a sub-path asks for <BASE_PATH>/api/... .
+const apiRouter = express.Router();
+apiRouter.use('/auth', require('./routes/authRoutes'));
+apiRouter.use('/exams', require('./routes/examRoutes'));
+apiRouter.use('/admin', require('./routes/adminRoutes'));
+apiRouter.use('/schools', require('./routes/schoolRoutes'));
+apiRouter.use('/students', require('./routes/studentRoutes'));
+apiRouter.use('/support', require('./routes/supportRoutes'));
 
 // Health check
-app.get('/api/health', (req, res) => {
+apiRouter.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', message: 'API is running fast and secure!' });
 });
+
+// Anything else under /api is a wrong URL or a wrong method. Express's default
+// 404 is an HTML page, which the browser's response.json() then fails to parse
+// with a message that says nothing useful ("The string did not match the
+// expected pattern." in Safari), so answer in JSON like every other endpoint.
+apiRouter.use((req, res) => {
+  res.status(404).json({
+    message: `No API endpoint for ${req.method} ${req.baseUrl}${req.path}`
+  });
+});
+
+app.use('/api', apiRouter);
 
 // Support for BASE_PATH if set
 if (BASE_PATH && BASE_PATH !== '/') {
   console.log(`Mounting app on BASE_PATH: ${BASE_PATH}`);
   const baseRouter = express.Router();
+  baseRouter.use('/api', apiRouter);
   baseRouter.use(express.static(staticPath));
   baseRouter.get('/', (req, res) => res.sendFile(path.join(staticPath, 'index.html')));
   app.use(BASE_PATH, baseRouter);

@@ -1,4 +1,5 @@
 const mysql = require('mysql2/promise');
+const bcrypt = require('bcrypt');
 require('dotenv').config();
 
 async function migrate() {
@@ -50,6 +51,43 @@ async function migrate() {
             if (hasCol.length === 0) {
                 console.log(`Adding ${col.name} column to exams table...`);
                 await connection.query(`ALTER TABLE exams ADD COLUMN ${col.name} ${col.definition}`);
+            }
+        }
+
+        // The admins table predates these migrations, so a database restored from
+        // an older dump can be missing it entirely — and then every admin login
+        // fails with a 500 instead of "invalid credentials".
+        console.log('Ensuring admins table...');
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS admins (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                username VARCHAR(100) NOT NULL UNIQUE,
+                email VARCHAR(255) NOT NULL UNIQUE,
+                password_hash VARCHAR(255) NOT NULL,
+                remember_token VARCHAR(100) DEFAULT NULL,
+                last_login TIMESTAMP NULL DEFAULT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        `);
+
+        // An empty admins table locks everyone out of the portal. Create the
+        // first account from the environment rather than inventing a default
+        // password that would then be the same on every deployment.
+        const [adminCount] = await connection.query('SELECT COUNT(*) AS count FROM admins');
+        if (adminCount[0].count === 0) {
+            const username = process.env.ADMIN_USERNAME;
+            const password = process.env.ADMIN_PASSWORD;
+            if (username && password) {
+                const email = process.env.ADMIN_EMAIL || `${username}@localhost`;
+                const hash = await bcrypt.hash(password, 10);
+                await connection.query(
+                    'INSERT INTO admins (username, email, password_hash) VALUES (?, ?, ?)',
+                    [username, email, hash]
+                );
+                console.log(`Created the first admin account: ${username}`);
+            } else {
+                console.warn('No admin accounts exist. Create one with: node backend/create-admin.js <username> <email> <password>');
             }
         }
 
