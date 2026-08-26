@@ -1,3 +1,20 @@
+// First line of the process. If Runtime Logs stay empty after a request, the
+// start command was never run at all — nothing below had a chance to fail.
+console.log(`[boot] node ${process.version} starting ${__filename}`);
+
+// Captured before dotenv runs. dotenv does not overwrite a variable that is
+// already set, so anything recorded here came from the platform and wins;
+// anything missing here will be filled from a .env file on disk. The port
+// matters most: a hosting platform assigns one and proxies to it, and a
+// PORT in a committed .env would otherwise send the app to a different one,
+// leaving the proxy with nothing to talk to.
+const PLATFORM_ENV = {
+  PORT: process.env.PORT,
+  NODE_ENV: process.env.NODE_ENV,
+  DB_USER: process.env.DB_USER,
+  DB_NAME: process.env.DB_NAME
+};
+
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
@@ -9,8 +26,8 @@ const { errorHandler } = require('./middleware/errorMiddleware');
 dotenv.config({ path: path.resolve(__dirname, '.env') });
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-// Run migrations automatically on startup
-require('./migrate-db');
+// Loaded, not run: migrations happen after the port is bound, below.
+const migrate = require('./migrate-db');
 
 const port = process.env.PORT || 5000;
 let BASE_PATH = process.env.BASE_PATH || '';
@@ -100,7 +117,22 @@ if (BASE_PATH && BASE_PATH !== '/') {
 // Error handling middleware
 app.use(errorHandler);
 
-app.listen(port, () => console.log(`Server started on port ${port}`));
+app.listen(port, () => {
+  const source = PLATFORM_ENV.PORT
+    ? 'assigned by the platform'
+    : (process.env.PORT ? 'from a .env file - the platform did not set one' : 'built-in default');
+  console.log(`Server started on port ${port} (${source})`);
+  console.log(`[env] NODE_ENV=${process.env.NODE_ENV || 'unset'} ` +
+    `DB_USER=${process.env.DB_USER || 'unset'} DB_NAME=${process.env.DB_NAME || 'unset'} ` +
+    `(from the platform: ${Object.entries(PLATFORM_ENV).filter(([, v]) => v).map(([k]) => k).join(', ') || 'nothing'})`);
+
+  // Migrations run only once the port is bound, and can never stop the app
+  // from serving. A database that is unreachable now shows up as a JSON error
+  // from the API rather than a dead process behind the platform's 503 page.
+  migrate()
+    .then(() => console.log('Startup migrations finished.'))
+    .catch(error => console.error('Startup migrations failed:', error.message));
+});
 
 // Keep process alive
 setInterval(() => {}, 1000 * 60 * 60);

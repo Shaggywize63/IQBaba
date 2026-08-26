@@ -1,5 +1,5 @@
 const pool = require('./config/db');
-const bcrypt = require('bcrypt');
+const bcrypt = require('./utils/hash');
 
 async function seed() {
   const connection = await pool.getConnection();

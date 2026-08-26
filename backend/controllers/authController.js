@@ -1,5 +1,5 @@
 const pool = require('../config/db');
-const bcrypt = require('bcrypt');
+const bcrypt = require('../utils/hash');
 const jwt = require('jsonwebtoken');
 
 // Generate JWT
