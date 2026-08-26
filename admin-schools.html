@@ -211,7 +211,8 @@
                     </div>
                     <div class="form-group md:col-span-2">
                         <label class="form-label font-bold" style="font-weight: 700; margin-bottom: 0.5rem; display: block;">Assigned Classes * (Select all that apply)</label>
-                        <div style="background:#F9FAFB; padding:10px; border:1px solid #E5E7EB; border-radius:6px; display:flex; flex-wrap:wrap; gap:12px;">
+                        <!-- Filled from Class Management at load; the markup below is a fallback. -->
+                        <div id="schoolClassOptions" style="background:#F9FAFB; padding:10px; border:1px solid #E5E7EB; border-radius:6px; display:flex; flex-wrap:wrap; gap:12px;">
                             <label style="cursor:pointer; display:flex; align-items:center; gap:4px; font-weight:normal;"><input type="checkbox" name="classes" value="Class 6" checked> Class 6</label>
                             <label style="cursor:pointer; display:flex; align-items:center; gap:4px; font-weight:normal;"><input type="checkbox" name="classes" value="Class 7" checked> Class 7</label>
                             <label style="cursor:pointer; display:flex; align-items:center; gap:4px; font-weight:normal;"><input type="checkbox" name="classes" value="Class 8" checked> Class 8</label>
@@ -223,7 +224,8 @@
                     </div>
                     <div class="form-group md:col-span-2">
                         <label class="form-label font-bold" style="font-weight: 700; margin-bottom: 0.5rem; display: block;">Assigned Subjects * (Select all that apply)</label>
-                        <div style="background:#F9FAFB; padding:10px; border:1px solid #E5E7EB; border-radius:6px; display:flex; flex-wrap:wrap; gap:12px;">
+                        <!-- Filled from Subject Management at load; the markup below is a fallback. -->
+                        <div id="schoolSubjectOptions" style="background:#F9FAFB; padding:10px; border:1px solid #E5E7EB; border-radius:6px; display:flex; flex-wrap:wrap; gap:12px;">
                             <label style="cursor:pointer; display:flex; align-items:center; gap:4px; font-weight:normal;"><input type="checkbox" name="subjects" value="Mathematics" checked> Mathematics</label>
                             <label style="cursor:pointer; display:flex; align-items:center; gap:4px; font-weight:normal;"><input type="checkbox" name="subjects" value="Science" checked> Science</label>
                             <label style="cursor:pointer; display:flex; align-items:center; gap:4px; font-weight:normal;"><input type="checkbox" name="subjects" value="English" checked> English</label>
@@ -306,6 +308,10 @@
                 return;
             }
             loadSchools();
+            window.populateBoardSelects();
+            // A new school starts with every class and subject ticked, as before.
+            window.populateClassCheckboxes('schoolClassOptions', 'classes', true);
+            window.populateSubjectCheckboxes('schoolSubjectOptions', 'subjects', true);
             wireFilters();
             wireBulkUpload();
         });
@@ -440,16 +446,12 @@
         }
 
         // --- Add / Edit -------------------------------------------------------
-        function setCheckboxGroup(form, name, values) {
-            const selected = String(values || '').split(',').map(v => v.trim()).filter(Boolean);
-            form.querySelectorAll(`input[name="${name}"]`).forEach(cb => {
-                cb.checked = selected.includes(cb.value);
-            });
-        }
-
         function openAddSchoolModal() {
             editingSchoolId = null;
             const form = document.getElementById('addSchoolForm');
+            // A previously-edited school may have left retired classes/subjects here.
+            ['schoolClassOptions', 'schoolSubjectOptions']
+                .forEach(id => window.clearStaleCheckboxes(document.getElementById(id)));
             form.reset();
             // form.reset() restores the checked-by-default state, which is what we want for a new school.
             document.getElementById('schoolModalTitle').textContent = 'Add New School';
@@ -472,12 +474,14 @@
             form.contactPerson.value = school.contact_person || '';
             form.email.value = school.email || '';
             form.phone.value = school.phone || '';
-            form.board.value = school.board || '';
+            window.setSelectValue(form.board, school.board);
             form.city.value = school.city || '';
             form.studentStrength.value = school.student_strength || 0;
             form.address.value = school.address || '';
-            setCheckboxGroup(form, 'classes', school.classes);
-            setCheckboxGroup(form, 'subjects', school.subjects);
+            // Ticks the school's own classes/subjects, adding a box for any value the
+            // admin has since retired so saving the school doesn't quietly drop it.
+            window.setCheckboxGroup(document.getElementById('schoolClassOptions'), 'classes', school.classes);
+            window.setCheckboxGroup(document.getElementById('schoolSubjectOptions'), 'subjects', school.subjects);
             form.password.value = '';
 
             document.getElementById('schoolModalTitle').textContent = `Edit ${school.name}`;

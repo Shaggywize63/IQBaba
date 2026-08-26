@@ -52,19 +52,42 @@ const api = {
       headers,
     };
 
+    let response;
     try {
-      const response = await fetch(url, config);
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'API request failed');
-      }
-      
-      return data;
+      response = await fetch(url, config);
     } catch (error) {
+      // fetch only rejects when the request never completed: the server is
+      // down, the address is wrong, or CORS blocked it. Browsers word this
+      // very differently, so say what we were doing instead.
       console.error(`API Error (${endpoint}):`, error);
-      throw error;
+      throw new Error(`Could not reach the server at ${url}. Check that the API is running and try again.`);
     }
+
+    // Read the body as text first. A 404, a crashed server or a proxy answers
+    // with an HTML page, and response.json() would reject with a parser message
+    // that names neither the URL nor the status ("The string did not match the
+    // expected pattern." in Safari, "Unexpected token '<'" in Chrome).
+    const raw = await response.text();
+    let data = null;
+    if (raw.trim()) {
+      try {
+        data = JSON.parse(raw);
+      } catch (parseError) {
+        console.error(`API Error (${endpoint}): expected JSON, got:`, raw.slice(0, 500));
+        throw new Error(response.status === 404
+          ? `The server has no API at ${url} (404). Check that the backend is deployed at this address.`
+          : `The server returned ${response.status} ${response.statusText} instead of JSON. Check the server logs.`);
+      }
+    }
+
+    if (!response.ok) {
+      const message = (data && data.message) || `API request failed (${response.status})`;
+      console.error(`API Error (${endpoint}):`, message);
+      throw new Error(message);
+    }
+
+    // 204 No Content and friends have nothing to parse.
+    return data === null ? {} : data;
   },
 
   // --- Auth Endpoints ---
@@ -91,6 +114,8 @@ const api = {
     }
     return data;
   },
+
+  async getPublicBoards() { return this.request('/auth/boards'); },
 
   // --- Admin Endpoints ---
   async getAdminStats() { return this.request('/admin/stats'); },

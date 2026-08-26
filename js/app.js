@@ -1,23 +1,3 @@
-// Shared Mock Data for demo purposes if needed
-const mockData = {
-  subjects: [
-    { id: 1, name: 'Mathematics', code: 'MATH' },
-    { id: 2, name: 'Science', code: 'SCI' },
-    { id: 3, name: 'English', code: 'ENG' },
-    { id: 4, name: 'Social Studies', code: 'SOC' },
-    { id: 5, name: 'Computer Science', code: 'COMP' }
-  ],
-  schools: [
-    'Delhi Public School',
-    'National Public School',
-    'Kendriya Vidyalaya',
-    'Ryan International',
-    'Ahlcon International'
-  ]
-};
-
-window.mockData = mockData;
-
 // Helper to show/hide loading spinners in tables
 window.setTableLoading = (tableId, isLoading) => {
     const table = document.getElementById(tableId);
@@ -48,6 +28,203 @@ window.serializeForm = (form) => {
         }
     });
     return obj;
+};
+
+
+/**
+ * Reference data the admin maintains (boards, classes, subjects). Every picker
+ * in the app reads from here so the admin management screens are the single
+ * source of truth — nothing is hardcoded in the pages.
+ *
+ * Each list is fetched once per page load and shared between callers.
+ */
+window.referenceData = (() => {
+    const cache = {};
+
+    const load = (key, endpoint) => {
+        if (!cache[key]) {
+            cache[key] = window.api.request(endpoint).then(rows => (Array.isArray(rows) ? rows : []));
+            // Don't cache a rejection — a later caller should be able to retry.
+            cache[key].catch(() => { delete cache[key]; });
+        }
+        return cache[key];
+    };
+
+    return {
+        boards: () => load('boards', '/auth/boards'),
+        classes: () => load('classes', '/auth/classes'),
+        subjects: () => load('subjects', '/auth/subjects'),
+        clear: () => Object.keys(cache).forEach(k => delete cache[k])
+    };
+})();
+
+/**
+ * Replace a <select>'s options with admin-managed values.
+ *
+ * Keeps the page's own "Select…" placeholder, preserves whatever was already
+ * selected, and keeps a stale value as an option so editing an old record does
+ * not silently reassign it. On failure the existing options are left alone so
+ * the form still works.
+ */
+const fillSelects = (selects, rows, valueOf, labelOf) => {
+    selects.forEach(select => {
+        const previous = select.value;
+        const placeholder = select.querySelector('option[value=""]');
+
+        select.innerHTML = '';
+        if (placeholder) select.appendChild(placeholder);
+
+        rows.forEach(row => {
+            const option = document.createElement('option');
+            option.value = valueOf(row);
+            option.textContent = labelOf(row);
+            select.appendChild(option);
+        });
+
+        if (previous && !rows.some(row => String(valueOf(row)) === String(previous))) {
+            const stale = document.createElement('option');
+            stale.value = previous;
+            stale.textContent = previous;
+            select.appendChild(stale);
+        }
+        if (previous) select.value = previous;
+    });
+};
+
+const populateSelects = async (selector, listFn, valueOf, labelOf, label) => {
+    const selects = Array.from(document.querySelectorAll(selector));
+    if (selects.length === 0) return [];
+    try {
+        const rows = await listFn();
+        if (rows.length === 0) return [];
+        fillSelects(selects, rows, valueOf, labelOf);
+        return rows;
+    } catch (error) {
+        console.error(`Could not load ${label}; leaving the existing options in place:`, error);
+        return [];
+    }
+};
+
+window.populateBoardSelects = (selector = 'select[name="board"]') =>
+    populateSelects(selector, window.referenceData.boards, b => b.name, b => b.name, 'boards');
+
+/** Class <select>s store the numeric level, matching students.class_level. */
+window.populateClassSelects = (selector = 'select[name="studentClass"]') =>
+    populateSelects(selector, window.referenceData.classes,
+        c => c.level, c => c.name || `Class ${c.level}`, 'classes');
+
+/**
+ * Select a value that may no longer be configured — an existing record can hold
+ * a class, board or subject an admin has since removed. Assigning a missing
+ * value to a <select> silently yields "", which would wipe the field on save,
+ * so keep it as an option instead.
+ */
+window.setSelectValue = (select, value) => {
+    if (!select) return;
+    const wanted = value === null || value === undefined ? '' : String(value);
+    if (wanted === '') { select.value = ''; return; }
+
+    const exists = Array.from(select.options).some(option => option.value === wanted);
+    if (!exists) {
+        const stale = document.createElement('option');
+        stale.value = wanted;
+        stale.textContent = wanted;
+        select.appendChild(stale);
+    }
+    select.value = wanted;
+};
+
+/** Subject <select>s filter by subject name, which is what results carry. */
+window.populateSubjectSelects = (selector = 'select[name="subject"]') =>
+    populateSelects(selector, window.referenceData.subjects, s => s.name, s => s.name, 'subjects');
+
+/**
+ * Checkbox groups. `valueOf` decides what gets submitted — school records store
+ * class and subject *names*, while student registration needs real subject ids
+ * for the student_subjects foreign key.
+ */
+const populateCheckboxes = async (containerId, listFn, fieldName, valueOf, labelOf, label, buildLabel, defaultChecked = false) => {
+    const container = document.getElementById(containerId);
+    if (!container) return [];
+
+    let rows;
+    try {
+        rows = await listFn();
+    } catch (error) {
+        console.error(`Could not load ${label}; leaving the existing options in place:`, error);
+        return [];
+    }
+    if (rows.length === 0) return [];
+
+    // Re-check whatever was ticked before, so a refresh doesn't lose a selection.
+    const previous = Array.from(container.querySelectorAll(`input[name="${fieldName}"]:checked`))
+        .map(input => input.value);
+
+    const hadSelection = previous.length > 0;
+    container.innerHTML = '';
+    rows.forEach(row => {
+        const value = String(valueOf(row));
+        const checked = hadSelection ? previous.includes(value) : defaultChecked;
+        container.appendChild(buildLabel(value, labelOf(row), fieldName, checked, defaultChecked));
+    });
+    return rows;
+};
+
+const plainCheckbox = (value, text, fieldName, checked, defaultChecked) => {
+    const label = document.createElement('label');
+    label.style.cssText = 'cursor:pointer; display:flex; align-items:center; gap:4px; font-weight:normal;';
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.name = fieldName;
+    input.value = value;
+    input.checked = checked;
+    // form.reset() falls back to defaultChecked, which is how the Add School
+    // modal starts with everything ticked.
+    input.defaultChecked = Boolean(defaultChecked);
+    label.appendChild(input);
+    label.appendChild(document.createTextNode(' ' + text));
+    return label;
+};
+
+/** School records store class names ("Class 6"), not levels. */
+window.populateClassCheckboxes = (containerId, fieldName = 'classes', defaultChecked = false) =>
+    populateCheckboxes(containerId, window.referenceData.classes, fieldName,
+        c => c.name || `Class ${c.level}`, c => c.name || `Class ${c.level}`, 'classes', plainCheckbox, defaultChecked);
+
+/** School records store subject names. */
+window.populateSubjectCheckboxes = (containerId, fieldName = 'subjects', defaultChecked = false) =>
+    populateCheckboxes(containerId, window.referenceData.subjects, fieldName,
+        s => s.name, s => s.name, 'subjects', plainCheckbox, defaultChecked);
+
+/**
+ * Tick the values an existing record holds. The counterpart to setSelectValue:
+ * a school saved with a class or subject an admin has since removed has no
+ * checkbox to tick, and saving would silently drop it, so add one.
+ */
+window.setCheckboxGroup = (container, fieldName, values) => {
+    if (!container) return;
+    const selected = (Array.isArray(values) ? values : String(values || '').split(','))
+        .map(v => String(v).trim()).filter(Boolean);
+
+    window.clearStaleCheckboxes(container);
+
+    const boxes = Array.from(container.querySelectorAll(`input[name="${fieldName}"]`));
+    boxes.forEach(box => { box.checked = selected.includes(box.value); });
+
+    selected
+        .filter(value => !boxes.some(box => box.value === value))
+        .forEach(value => {
+            const label = plainCheckbox(value, value, fieldName, true, false);
+            label.dataset.stale = 'true';
+            label.title = 'No longer configured \u2014 kept so saving preserves it';
+            container.appendChild(label);
+        });
+};
+
+/** Drop the retired values a previous record added, so the next one starts clean. */
+window.clearStaleCheckboxes = (container) => {
+    if (!container) return;
+    container.querySelectorAll('label[data-stale]').forEach(label => label.remove());
 };
 
 // Helper for logout

@@ -425,6 +425,8 @@
                 return;
             }
             loadStudents();
+            window.populateBoardSelects();
+            window.populateClassSelects();
             wireFilters();
             wireBulkUpload();
         });
@@ -552,8 +554,8 @@
 
             form.fullName.value = student.full_name || '';
             form.username.value = student.username || '';
-            form.studentClass.value = String(student.class_level || '');
-            form.board.value = student.board || '';
+            window.setSelectValue(form.studentClass, student.class_level);
+            window.setSelectValue(form.board, student.board);
             form.city.value = student.city || '';
             form.phone.value = student.phone || '';
             form.email.value = student.email || '';

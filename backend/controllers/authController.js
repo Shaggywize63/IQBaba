@@ -21,8 +21,19 @@ const registerStudent = async (req, res, next) => {
       throw new Error('Please add all required fields and select at least one subject');
     }
 
-    // Generate unique username
-    const username = fullName.toLowerCase().replace(/\s+/g, '') + Math.floor(1000 + Math.random() * 9000);
+    // Generate a username that is actually free — a bare 4-digit suffix collides
+    // often for common names, and the UNIQUE index would fail the whole signup.
+    const usernameBase = fullName.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 40) || 'student';
+    let username;
+    for (let attempt = 0; attempt < 12; attempt++) {
+      const candidate = usernameBase + Math.floor(1000 + Math.random() * 9000);
+      const [taken] = await pool.execute('SELECT id FROM students WHERE username = ?', [candidate]);
+      if (taken.length === 0) { username = candidate; break; }
+    }
+    if (!username) {
+      res.status(500);
+      throw new Error('Could not allocate a username, please try again');
+    }
 
     // Hash password
     const salt = await bcrypt.genSalt(10);
@@ -77,6 +88,9 @@ const registerStudent = async (req, res, next) => {
         username,
         email,
         status,
+        // The student never typed a username — the UI must show them these.
+        loginUsername: username,
+        loginPassword: password,
         token: generateToken(studentId, 'student')
       });
     } catch (error) {
@@ -102,21 +116,38 @@ const loginUser = async (req, res, next) => {
       throw new Error('Please provide username, password and role');
     }
 
-    let tableName, userField;
-    if (role === 'student' || role === 'admin') {
-      tableName = `${role}s`;
+    const identifier = String(username).trim();
+    let tableName, userField, rows;
+
+    if (role === 'admin') {
+      tableName = 'admins';
       userField = 'username';
+      [rows] = await pool.execute('SELECT * FROM admins WHERE username = ?', [identifier]);
     } else if (role === 'school') {
       tableName = 'schools';
-      userField = 'email'; // Assuming school logs in with email
+      userField = 'email';
+      [rows] = await pool.execute('SELECT * FROM schools WHERE email = ?', [identifier]);
+    } else if (role === 'student') {
+      tableName = 'students';
+      userField = 'username';
+      // Students never choose their username — it is generated at signup — so let
+      // them sign in with the email they did type. Email is not unique on this
+      // table, so it only counts when it identifies exactly one student.
+      [rows] = await pool.execute('SELECT * FROM students WHERE username = ?', [identifier]);
+      if (rows.length === 0 && identifier.includes('@')) {
+        const [byEmail] = await pool.execute('SELECT * FROM students WHERE email = ?', [identifier]);
+        if (byEmail.length === 1) {
+          rows = byEmail;
+        } else if (byEmail.length > 1) {
+          res.status(409);
+          throw new Error('That email is registered to more than one student. Please sign in with your username.');
+        }
+      }
     } else {
       res.status(400);
       throw new Error('Invalid role');
     }
 
-    // Check for user email/username
-    const [rows] = await pool.execute(`SELECT * FROM ${tableName} WHERE ${userField} = ?`, [username]);
-    
     if (rows.length === 0) {
       res.status(401);
       throw new Error('Invalid credentials');
@@ -124,22 +155,28 @@ const loginUser = async (req, res, next) => {
 
     const user = rows[0];
 
-    // Check password
-    if (user && (await bcrypt.compare(password, user.password_hash))) {
-      
-      // Update last login
-      await pool.execute(`UPDATE ${tableName} SET last_login = NOW() WHERE id = ?`, [user.id]);
-
-      res.json({
-        id: user.id,
-        [userField]: user[userField],
-        role: role,
-        token: generateToken(user.id, role),
-      });
-    } else {
+    if (!user.password_hash || !(await bcrypt.compare(password, user.password_hash))) {
       res.status(401);
       throw new Error('Invalid credentials');
     }
+
+    // A deactivated account must not receive a token — students awaiting admin
+    // approval are created Inactive on purpose, and admins deactivate schools.
+    if (user.status === 'Inactive') {
+      res.status(403);
+      throw new Error(role === 'student'
+        ? 'Your account is pending activation by the administrator.'
+        : 'This account has been deactivated. Please contact the administrator.');
+    }
+
+    await pool.execute(`UPDATE ${tableName} SET last_login = NOW() WHERE id = ?`, [user.id]);
+
+    res.json({
+      id: user.id,
+      [userField]: user[userField],
+      role: role,
+      token: generateToken(user.id, role),
+    });
   } catch (error) {
     next(error);
   }
@@ -157,8 +194,51 @@ const getPublicSchools = async (req, res, next) => {
   }
 };
 
+// Reference data the admin maintains. These are read-only and carry nothing
+// sensitive, so sign-up forms and the school portal can read them without a
+// token — the /api/admin/* equivalents are admin-only and would 403.
+
+// @desc    Boards configured in Board Management
+// @route   GET /api/auth/boards
+// @access  Public
+const getPublicBoards = async (req, res, next) => {
+  try {
+    const [boards] = await pool.query('SELECT id, name FROM boards ORDER BY name');
+    res.json(boards);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Classes configured in Class Management
+// @route   GET /api/auth/classes
+// @access  Public
+const getPublicClasses = async (req, res, next) => {
+  try {
+    const [classes] = await pool.query('SELECT id, name, level FROM classes ORDER BY level');
+    res.json(classes);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Subjects configured in Subject Management
+// @route   GET /api/auth/subjects
+// @access  Public
+const getPublicSubjects = async (req, res, next) => {
+  try {
+    const [subjects] = await pool.query('SELECT id, code, name FROM subjects ORDER BY name');
+    res.json(subjects);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   registerStudent,
   loginUser,
-  getPublicSchools
+  getPublicSchools,
+  getPublicBoards,
+  getPublicClasses,
+  getPublicSubjects
 };
