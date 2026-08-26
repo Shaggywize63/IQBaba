@@ -688,7 +688,8 @@
                     return;
                 }
 
-                payload.password = 'password123';
+                // No password field on this form: the server generates one and
+                // returns it, and showCredentials() puts it on screen.
                 const response = await window.api.registerStudent(payload);
 
                 // The username is generated server-side, so this screen is the only

@@ -1,5 +1,6 @@
 const pool = require('../config/db');
 const bcrypt = require('../utils/hash');
+const { generatePassword } = require('../utils/password');
 const jwt = require('jsonwebtoken');
 
 // Generate JWT
@@ -16,7 +17,7 @@ const registerStudent = async (req, res, next) => {
   try {
     const { fullName, studentClass, schoolId, customSchoolName, board, email, phone, password, subjects, idCardFile } = req.body;
 
-    if (!fullName || !studentClass || (!schoolId && !customSchoolName) || !board || !password || !subjects || subjects.length === 0) {
+    if (!fullName || !studentClass || (!schoolId && !customSchoolName) || !board || !subjects || subjects.length === 0) {
       res.status(400);
       throw new Error('Please add all required fields and select at least one subject');
     }
@@ -35,9 +36,13 @@ const registerStudent = async (req, res, next) => {
       throw new Error('Could not allocate a username, please try again');
     }
 
+    // A student never chooses a password at sign-up; the screen shows them the
+    // one generated here. A caller may still supply their own.
+    const plainPassword = password || generatePassword();
+
     // Hash password
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const hashedPassword = await bcrypt.hash(plainPassword, salt);
     const registrationDate = new Date().toISOString().split('T')[0];
 
     // Determine status (Active if registered school, Inactive if unregistered school)
@@ -90,7 +95,7 @@ const registerStudent = async (req, res, next) => {
         status,
         // The student never typed a username — the UI must show them these.
         loginUsername: username,
-        loginPassword: password,
+        loginPassword: plainPassword,
         token: generateToken(studentId, 'student')
       });
     } catch (error) {

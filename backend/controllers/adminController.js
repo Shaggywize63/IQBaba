@@ -1,5 +1,6 @@
 const pool = require('../config/db');
 const bcrypt = require('../utils/hash');
+const { generatePassword } = require('../utils/password');
 const {
   str, optional, pick, isValidEmail, normalizeClassLevel, normalizeDifficulty,
   normalizeQuestionType, normalizeStatus, normalizeCorrectOption, normalizeList,
@@ -269,7 +270,8 @@ const addSchool = async (req, res, next) => {
     
     // Hash a default password
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash('school123', salt);
+    const plainPassword = req.body.password || generatePassword();
+    const hashedPassword = await bcrypt.hash(plainPassword, salt);
 
     // Auto-generate school code if not provided
     const schoolCode = code || generateSchoolCode(name);
@@ -354,7 +356,8 @@ const bulkAddSchools = async (req, res, next) => {
     }
 
     const salt = await bcrypt.genSalt(10);
-    const defaultPassword = await bcrypt.hash('school123', salt);
+    // Generated per row below, so an import does not give every school the
+    // same password.
 
     const failed = [];
     const created = [];
@@ -390,10 +393,8 @@ const bulkAddSchools = async (req, res, next) => {
       const strength = strengthRaw === '' ? 0 : parseInt(strengthRaw, 10);
       if (Number.isNaN(strength) || strength < 0) { reject(`Student strength must be a positive number (got "${strengthRaw}")`); continue; }
 
-      let passwordHash = defaultPassword;
-      if (str(row.password)) {
-        passwordHash = await bcrypt.hash(str(row.password), salt);
-      }
+      const plainPassword = str(row.password) || generatePassword();
+      const passwordHash = await bcrypt.hash(plainPassword, salt);
 
       try {
         const [result] = await pool.execute(
@@ -417,7 +418,7 @@ const bulkAddSchools = async (req, res, next) => {
         );
         seenEmails.add(email);
         seenCodes.add(code.toLowerCase());
-        created.push({ id: result.insertId, name, code });
+        created.push({ id: result.insertId, name, code, email, password: plainPassword });
       } catch (error) {
         reject(describeDbError(error, { duplicateHint: `${name} / ${email}` }));
       }
@@ -446,7 +447,8 @@ const bulkAddStudents = async (req, res, next) => {
     }
 
     const salt = await bcrypt.genSalt(10);
-    const defaultPassword = await bcrypt.hash('password123', salt);
+    // Generated per row below, so an import does not give every student the
+    // same password.
     const schoolLookup = await buildSchoolLookup();
 
     const regDate = new Date().toISOString().split('T')[0];
@@ -492,10 +494,8 @@ const bulkAddStudents = async (req, res, next) => {
       const status = row.status ? normalizeStatus(row.status) : 'Active';
       if (row.status && !status) { reject(`Status must be Active or Inactive (got "${row.status}")`); continue; }
 
-      let passwordHash = defaultPassword;
-      if (str(row.password)) {
-        passwordHash = await bcrypt.hash(str(row.password), salt);
-      }
+      const plainPassword = str(row.password) || generatePassword();
+      const passwordHash = await bcrypt.hash(plainPassword, salt);
 
       try {
         const [result] = await pool.execute(
@@ -517,7 +517,7 @@ const bulkAddStudents = async (req, res, next) => {
           ]
         );
         seenUsernames.add(username.toLowerCase());
-        created.push({ id: result.insertId, fullName, username });
+        created.push({ id: result.insertId, fullName, username, password: plainPassword });
       } catch (error) {
         reject(describeDbError(error, { duplicateHint: username }));
       }
@@ -644,7 +644,8 @@ const addStudent = async (req, res, next) => {
     const { fullName, studentClass, schoolId, board, city, email, phone, username, password } = req.body;
     
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password || 'password123', salt);
+    const plainPassword = password || generatePassword();
+    const hashedPassword = await bcrypt.hash(plainPassword, salt);
 
     const [result] = await pool.execute(
       'INSERT INTO students (full_name, username, password_hash, class_level, school_id, board, city, email, phone, registration_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())',
@@ -653,7 +654,10 @@ const addStudent = async (req, res, next) => {
 
     res.status(201).json({
       message: 'Student created successfully',
-      studentId: result.insertId
+      studentId: result.insertId,
+      username,
+      // Returned once so the screen can show it: it is not recoverable later.
+      password: plainPassword
     });
   } catch (error) {
     if (error.code === 'ER_DUP_ENTRY') {

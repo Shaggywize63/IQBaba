@@ -168,6 +168,40 @@
    *   submit(items)    - async function that posts the valid rows
    *   onSuccess(result, items) - called after a successful submit
    */
+  /**
+   * Offer the generated credentials as a CSV. They are only ever sent back
+   * once, so this download is the only record of them.
+   */
+  function offerCredentials(created) {
+    const withPasswords = created.filter(row => row && row.password);
+    if (withPasswords.length === 0) return;
+
+    const header = ['Name', 'Username', 'Email', 'Password'];
+    const rows = withPasswords.map(row => [
+      row.fullName || row.name || '',
+      row.username || '',
+      row.email || '',
+      row.password
+    ]);
+    const csv = '\ufeff' + [header, ...rows]
+      .map(cols => cols.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))
+      .join('\r\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `credentials-${withPasswords.length}-accounts.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+    window.showNotification(
+      `${withPasswords.length} password${withPasswords.length === 1 ? '' : 's'} downloaded — they are not stored anywhere else`,
+      'success');
+  }
+
   window.setupBulkUpload = function (config) {
     const el = id => (typeof id === 'string' ? document.getElementById(id) : id);
 
@@ -296,6 +330,10 @@
           const result = await config.submit(validRows);
           const inserted = result && result.inserted !== undefined ? result.inserted : validRows.length;
           const failed = (result && result.failed) || [];
+          // Each imported account gets its own generated password, returned
+          // once. Without a way to take them off this screen, nobody could
+          // sign in to the accounts the import just made.
+          offerCredentials((result && result.created) || []);
 
           if (failed.length > 0) {
             window.showNotification(`${inserted} uploaded, ${failed.length} rejected — see details`, 'danger');

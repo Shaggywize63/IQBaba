@@ -1,5 +1,6 @@
 const pool = require('./config/db');
 const bcrypt = require('./utils/hash');
+const { generatePassword } = require('./utils/password');
 
 async function seed() {
   const connection = await pool.getConnection();
@@ -8,9 +9,16 @@ async function seed() {
     await connection.beginTransaction();
 
     const salt = await bcrypt.genSalt(10);
-    const adminPass = await bcrypt.hash('admin123', salt);
-    const schoolPass = await bcrypt.hash('school123', salt);
-    const studentPass = await bcrypt.hash('password123', salt);
+
+    // Generated per run and printed once. Baking these into the repository is
+    // how "admin123" ended up live on a public site.
+    const adminPlain = process.env.ADMIN_PASSWORD || generatePassword();
+    const schoolPlain = generatePassword();
+    const studentPlain = generatePassword();
+
+    const adminPass = await bcrypt.hash(adminPlain, salt);
+    const schoolPass = await bcrypt.hash(schoolPlain, salt);
+    const studentPass = await bcrypt.hash(studentPlain, salt);
 
     // 1. Seed Admin
     await connection.execute(
@@ -39,6 +47,12 @@ async function seed() {
 
     await connection.commit();
     console.log('Database seeded successfully!');
+    console.log('');
+    console.log('  admin    admin / ' + adminPlain);
+    console.log('  school   dps@example.com / ' + schoolPlain);
+    console.log('  student  rahul123 / ' + studentPlain);
+    console.log('');
+    console.log('Shown once. Nothing else prints them again.');
     process.exit(0);
   } catch (error) {
     await connection.rollback();
