@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IQ Baba — Deployment Diagnostics</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+         max-width: 860px; margin: 0 auto; padding: 2rem 1.25rem; line-height: 1.55;
+         color: #16233a; background: #fdfaf5; }
+  h1 { font-size: 1.5rem; margin-bottom: .25rem; }
+  p.sub { color: #5a6a85; margin-top: 0; }
+  .row { border: 1px solid #e3dcd0; border-radius: 10px; padding: .85rem 1rem;
+         margin-bottom: .6rem; background: #fff; }
+  .row h2 { font-size: .95rem; margin: 0 0 .3rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .verdict { font-weight: 600; }
+  .ok   { color: #1a7f4b; }
+  .bad  { color: #b3261e; }
+  .warn { color: #9a6700; }
+  .detail { color: #5a6a85; font-size: .875rem; margin-top: .2rem;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            white-space: pre-wrap; word-break: break-word; }
+  #summary { border-left: 4px solid #16233a; padding: .75rem 1rem; background: #fff;
+             border-radius: 0 10px 10px 0; margin: 1.25rem 0; }
+  code { background: #f0ebe2; padding: .1rem .3rem; border-radius: 4px; }
+</style>
+</head>
+<body>
+<h1>Deployment diagnostics</h1>
+<p class="sub">Checks what this page's own server actually serves. Nothing is sent anywhere else.</p>
+
+<div id="summary">Running checks…</div>
+<div id="results"></div>
+
+<script>
+// Deliberately self-contained: it must not depend on js/api.js or js/app.js,
+// since a stale copy of those is one of the things being tested.
+const results = document.getElementById('results');
+const summary = document.getElementById('summary');
+const problems = [];
+
+function row(title, verdict, cls, detail) {
+  const el = document.createElement('div');
+  el.className = 'row';
+  const h = document.createElement('h2');
+  h.textContent = title;
+  const v = document.createElement('div');
+  v.className = 'verdict ' + cls;
+  v.textContent = verdict;
+  el.append(h, v);
+  if (detail) {
+    const d = document.createElement('div');
+    d.className = 'detail';
+    d.textContent = detail;
+    el.appendChild(d);
+  }
+  results.appendChild(el);
+  if (cls === 'bad') problems.push(title + ' — ' + verdict);
+}
+
+// The same derivation js/api.js uses, so this reports the real API base.
+function apiBase() {
+  const parts = window.location.pathname.split('/');
+  if (parts[parts.length - 1].includes('.')) parts.pop();
+  const basePath = parts.join('/');
+  return (basePath.endsWith('/') ? basePath : basePath + '/') + 'api';
+}
+
+const BASE = apiBase();
+
+async function probe(label, path, expect) {
+  const url = BASE + path;
+  let res;
+  try {
+    res = await fetch(url);
+  } catch (err) {
+    return row(label, 'Could not reach the server', 'bad',
+      url + '\n' + err.message + '\nThe API is not answering at this address at all.');
+  }
+  const type = res.headers.get('content-type') || '(none)';
+  const raw = await res.text();
+
+  let data = null;
+  try { data = JSON.parse(raw); } catch (e) { data = null; }
+
+  if (data === null) {
+    return row(label, `Returned ${res.status}, and not JSON`, 'bad',
+      url + '\ncontent-type: ' + type +
+      '\nfirst 200 characters:\n' + raw.slice(0, 200) +
+      '\n\nThis is the failure behind "The string did not match the expected pattern."');
+  }
+  if (!res.ok) {
+    return row(label, `Returned ${res.status}`, res.status === 404 ? 'bad' : 'warn',
+      url + '\n' + (data.message || raw.slice(0, 200)));
+  }
+  if (expect === 'list') {
+    if (!Array.isArray(data)) {
+      return row(label, 'Answered, but not with a list', 'bad', url + '\n' + raw.slice(0, 200));
+    }
+    if (data.length === 0) {
+      return row(label, 'Answered with an EMPTY list', 'warn',
+        url + '\nThe endpoint works, so the table has no rows yet. Add them in the admin screens.');
+    }
+    const names = data.map(r => r.name).filter(Boolean).slice(0, 12).join(', ');
+    return row(label, `OK — ${data.length} row(s)`, 'ok', url + '\n' + names);
+  }
+  return row(label, 'OK', 'ok', url + '\n' + raw.slice(0, 160));
+}
+
+async function checkBuild() {
+  const url = new URL('js/app.js', window.location.href).href;
+  let text;
+  try {
+    text = await (await fetch(url)).text();
+  } catch (err) {
+    return row('Which js/app.js is deployed?', 'Could not read it', 'bad', url + '\n' + err.message);
+  }
+  const hasNew = text.includes('referenceData') && text.includes('populateClassSelects');
+  const hasOld = text.includes('mockData');
+  if (hasNew) {
+    return row('Which js/app.js is deployed?', 'Current version', 'ok',
+      url + '\nIt fetches boards, classes and subjects from the admin tables.');
+  }
+  return row('Which js/app.js is deployed?',
+    hasOld ? 'OLD version — this deploy predates the fix' : 'Unrecognised version', 'bad',
+    url + '\nThe dropdowns are hardcoded in this copy, so admin-managed boards and\n' +
+    'classes can never appear. Deploy the latest main, then hard-reload (the\n' +
+    'browser also caches this file).');
+}
+
+(async () => {
+  row('This page', window.location.origin, 'ok',
+    'API base derived from the URL: ' + BASE +
+    '\nIf the backend runs on a different host from this page, that base is wrong.');
+
+  await checkBuild();
+  await probe('API reachable  (/api/health)', '/health');
+  await probe('Boards         (/api/auth/boards)', '/auth/boards', 'list');
+  await probe('Classes        (/api/auth/classes)', '/auth/classes', 'list');
+  await probe('Subjects       (/api/auth/subjects)', '/auth/subjects', 'list');
+  await probe('Schools        (/api/auth/schools)', '/auth/schools', 'list');
+
+  summary.innerHTML = problems.length === 0
+    ? '<strong class="ok">Everything checked out.</strong> If a dropdown still looks wrong, ' +
+      'the browser is serving a cached file — hard-reload the page.'
+    : '<strong class="bad">' + problems.length + ' problem(s) found.</strong><br>' +
+      problems.map(p => '• ' + p).join('<br>');
+})();
+</script>
+</body>
+</html>
