@@ -32,6 +32,7 @@
 <div id="summary">Running checks…</div>
 <div id="results"></div>
 
+<script src="js/config.js"></script>
 <script>
 // Deliberately self-contained: it must not depend on js/api.js or js/app.js,
 // since a stale copy of those is one of the things being tested.
@@ -58,15 +59,25 @@ function row(title, verdict, cls, detail) {
   if (cls === 'bad') problems.push(title + ' — ' + verdict);
 }
 
-// The same derivation js/api.js uses, so this reports the real API base.
+// The same resolution js/api.js uses, so this reports the real API base.
+// js/config.js is loaded by the <script> tag above: if an older upload lacks
+// the file the tag simply 404s and the value stays undefined, which is exactly
+// the "derived" case. Nothing else here depends on a project file, since
+// js/api.js and js/app.js are among the things being tested.
+const CONFIGURED = String(window.IQBABA_API_BASE || '').trim();
+
 function apiBase() {
+  if (CONFIGURED) {
+    const trimmed = CONFIGURED.replace(/\/+$/, '');
+    return /\/api$/.test(trimmed) ? trimmed : trimmed + '/api';
+  }
   const parts = window.location.pathname.split('/');
   if (parts[parts.length - 1].includes('.')) parts.pop();
   const basePath = parts.join('/');
   return (basePath.endsWith('/') ? basePath : basePath + '/') + 'api';
 }
 
-const BASE = apiBase();
+let BASE;
 
 async function probe(label, path, expect) {
   const url = BASE + path;
@@ -129,9 +140,15 @@ async function checkBuild() {
 }
 
 (async () => {
+  BASE = apiBase();
+
   row('This page', window.location.origin, 'ok',
-    'API base derived from the URL: ' + BASE +
-    '\nIf the backend runs on a different host from this page, that base is wrong.');
+    'API base in use: ' + BASE + '\n' + (CONFIGURED
+      ? 'Set explicitly in js/config.js.'
+      : 'Derived from this page\u2019s own address, because js/config.js sets no\n' +
+        'address. That is only right when the same server answers for both the\n' +
+        'pages and the API. On shared hosting it usually does not \u2014 set\n' +
+        'window.IQBABA_API_BASE in js/config.js to the Node app\u2019s address.'));
 
   await checkBuild();
   await probe('API reachable  (/api/health)', '/health');
