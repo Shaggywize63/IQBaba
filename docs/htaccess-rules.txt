@@ -1,0 +1,31 @@
+Append these to the EXISTING .htaccess in public_html. Do not replace that
+file: on Hostinger it holds the Passenger directives that route requests to
+the Node app, and overwriting it takes the API offline.
+
+Open hPanel > Files > File Manager > public_html > .htaccess, and add this
+BELOW whatever is already there (the Passenger... lines stay at the top).
+
+# ---------------------------------------------------------------------------
+# Keep server-side files out of the web root. The Git deployment publishes the
+# whole repository here, so every path in it is a URL unless denied.
+
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+<FilesMatch "\.(sql|sql\.gz|sh|log|yml|yaml|lock)$">
+    Require all denied
+</FilesMatch>
+
+RedirectMatch 404 ^/\.git(/|$)
+RedirectMatch 404 ^/backend(/|$)
+RedirectMatch 404 ^/node_modules(/|$)
+RedirectMatch 404 ^/backups(/|$)
+
+Options -Indexes
+# ---------------------------------------------------------------------------
+
+Check it worked: https://<your domain>/.env should return 403 or 404, and
+https://<your domain>/api/health should still return JSON. If /api stops
+answering, the Passenger lines were lost - restore them by re-saving the
+Node.js application in hPanel.

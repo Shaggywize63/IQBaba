@@ -91,7 +91,20 @@ npm run create-admin -- admin admin@yourschool.com '<password>'
 
 The same command resets the password of an existing admin.
 
-## 5. Check it
+## 5. Protect the server-side files
+
+The Git deployment publishes the whole repository into `public_html`, so
+`/.env`, `/database_schema.sql` and `/backend/...` are all fetchable URLs.
+
+`docs/htaccess-rules.txt` has rules that deny them. **Append** them to the
+`.htaccess` already in `public_html` — never replace that file. Hostinger keeps
+the Passenger directives that route requests to the Node app in it, and
+overwriting them takes the API offline: `/api/*` starts answering 404 because
+the web server, not Node, is handling it.
+
+This repository deliberately ships no `.htaccess` for that reason.
+
+## 6. Check it
 
 Open **`/diagnostics.html`**. It reports which API address is in use, whether
 the current `js/app.js` is deployed, and whether `/api/*` answers with JSON or
