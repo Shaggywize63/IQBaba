@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {
   createExam, getExams, addQuestion, deleteQuestion, getStats, getStudents, getSchools, getResults, getQuestions,
-  addSchool, addStudent, bulkAddSchools, bulkAddStudents, bulkAddQuestions,
+  addSchool, addStudent, bulkAddSchools, bulkAddStudents, resetStudentPasswords, bulkAddQuestions,
   updateSchool, updateStudent, updateQuestion,
   deleteStudent, updateStudentStatus, deleteSchool, updateSchoolStatus,
   getBoards, addBoard, updateBoard, deleteBoard, getClasses, addClass, updateClass, deleteClass,
@@ -28,6 +28,7 @@ router.put('/schools/:id/status', updateSchoolStatus);
 
 router.post('/students', addStudent);
 router.post('/students/bulk', bulkAddStudents);
+router.post('/students/reset-passwords', resetStudentPasswords);
 router.put('/students/:id', updateStudent);
 router.delete('/students/:id', deleteStudent);
 router.put('/students/:id/status', updateStudentStatus);

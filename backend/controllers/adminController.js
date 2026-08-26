@@ -668,6 +668,64 @@ const addStudent = async (req, res, next) => {
   }
 };
 
+/**
+ * Issue a fresh password to students who still share one.
+ *
+ * Accounts created before per-account passwords all hold the same hash, so one
+ * leaked password is every student's password. This replaces them and returns
+ * the new ones exactly once - they are only stored hashed, so a caller that
+ * discards this response has locked those students out.
+ *
+ * With no studentIds, every student is reset.
+ */
+const resetStudentPasswords = async (req, res, next) => {
+  try {
+    const { studentIds } = req.body || {};
+
+    let rows;
+    if (Array.isArray(studentIds) && studentIds.length > 0) {
+      const ids = studentIds.map(Number).filter(id => Number.isInteger(id) && id > 0);
+      if (ids.length === 0) {
+        res.status(400);
+        throw new Error('studentIds must contain at least one numeric id');
+      }
+      const placeholders = ids.map(() => '?').join(', ');
+      [rows] = await pool.execute(
+        `SELECT id, full_name, username, email FROM students WHERE id IN (${placeholders})`, ids);
+    } else {
+      [rows] = await pool.query('SELECT id, full_name, username, email FROM students');
+    }
+
+    if (rows.length === 0) {
+      return res.json({ reset: 0, credentials: [], message: 'No matching students' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const credentials = [];
+
+    for (const row of rows) {
+      const password = generatePassword();
+      await pool.execute('UPDATE students SET password_hash = ? WHERE id = ?',
+        [await bcrypt.hash(password, salt), row.id]);
+      credentials.push({
+        id: row.id,
+        fullName: row.full_name,
+        username: row.username,
+        email: row.email || '',
+        password
+      });
+    }
+
+    res.json({
+      reset: credentials.length,
+      message: `${credentials.length} student password${credentials.length === 1 ? '' : 's'} reset`,
+      credentials
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const deleteStudent = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -1140,6 +1198,7 @@ module.exports = {
   updateStudent,
   updateQuestion,
   deleteStudent,
+  resetStudentPasswords,
   updateStudentStatus,
   deleteSchool,
   updateSchoolStatus,

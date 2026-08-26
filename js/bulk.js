@@ -202,6 +202,10 @@
       'success');
   }
 
+  // Shared so other screens (the password reset) can hand over credentials the
+  // same way, rather than growing a second copy of this.
+  window.downloadCredentials = offerCredentials;
+
   window.setupBulkUpload = function (config) {
     const el = id => (typeof id === 'string' ? document.getElementById(id) : id);
 
