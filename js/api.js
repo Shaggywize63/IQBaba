@@ -3,6 +3,15 @@
  */
 
 const getApiBaseUrl = () => {
+  // An address configured in js/config.js wins. Deriving the API from the
+  // page's own location only holds when one server answers for both; on shared
+  // hosting the pages and the Node app usually live at different addresses.
+  const configured = String(window.IQBABA_API_BASE || '').trim();
+  if (configured) {
+    const trimmed = configured.replace(/\/+$/, '');
+    return /\/api$/.test(trimmed) ? trimmed : trimmed + '/api';
+  }
+
   const pathname = window.location.pathname;
   const parts = pathname.split('/');
   // If the last part looks like a file (contains a dot), remove it
