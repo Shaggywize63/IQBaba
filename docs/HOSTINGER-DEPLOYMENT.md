@@ -59,6 +59,11 @@ In the same Node.js panel, add these rather than uploading a `.env`:
 | `DB_NAME` | your Hostinger database name |
 | `JWT_SECRET` | the new long random string |
 | `BASE_PATH` | leave empty when serving from the domain root |
+| `ALLOWED_ORIGINS` | `https://iqbaba.in,https://www.iqbaba.in` |
+
+Without `ALLOWED_ORIGINS` any site may call the API, and the app says so in
+the log at startup. Setting it also narrows the `connect-src` in the
+Content-Security-Policy to those origins.
 
 Do **not** set `PORT` — Hostinger assigns one and the app reads it.
 

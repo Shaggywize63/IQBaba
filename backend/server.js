@@ -36,15 +36,31 @@ if (BASE_PATH.endsWith('/')) BASE_PATH = BASE_PATH.slice(0, -1);
 
 const app = express();
 
-// Security middleware (Removed to fix CSP issues)
-// app.use(helmet({
-//   contentSecurityPolicy: false,
-//   crossOriginResourcePolicy: false,
-// }));
+// Helmet supplies the headers that carry no risk here - nosniff, frameguard,
+// referrer policy, HSTS. Its Content-Security-Policy is off because these
+// pages are written with inline <script> blocks and need a hand-written one,
+// set below. Resources stay cross-origin readable so the pages can be served
+// from a different host than the API.
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  crossOriginEmbedderPolicy: false
+}));
 
-// CORS config
+// CORS. ALLOWED_ORIGINS is a comma-separated list, e.g.
+//   ALLOWED_ORIGINS=https://iqbaba.in,https://www.iqbaba.in
+// Without it every origin is allowed, which is not what a portal holding
+// student records should run on - hence the warning at startup.
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '')
+  .split(',').map(o => o.trim()).filter(Boolean);
+
+if (ALLOWED_ORIGINS.length === 0) {
+  console.warn('[cors] ALLOWED_ORIGINS is not set, so any site may call this API. ' +
+    'Set it to your own origins, comma separated.');
+}
+
 app.use(cors({
-  origin: '*',
+  origin: ALLOWED_ORIGINS.length > 0 ? ALLOWED_ORIGINS : '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -55,9 +71,27 @@ app.use((req, res, next) => {
   next();
 });
 
-// Force permissive CSP for demo
+// Content-Security-Policy.
+//
+// 'unsafe-inline' stays for scripts and styles: every page carries inline
+// <script> blocks and inline style attributes, and removing it would need all
+// of them rewritten. Everything else is now named rather than left as *, and
+// 'unsafe-eval' is gone - nothing in this codebase evaluates strings.
+const CSP = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' data: https://fonts.gstatic.com",
+  "img-src 'self' data: blob:",
+  `connect-src 'self'${ALLOWED_ORIGINS.length ? ' ' + ALLOWED_ORIGINS.join(' ') : ''}`,
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'"
+].join('; ');
+
 app.use((req, res, next) => {
-  res.setHeader('Content-Security-Policy', "default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data:; font-src *; connect-src *;");
+  res.setHeader('Content-Security-Policy', CSP);
   next();
 });
 
