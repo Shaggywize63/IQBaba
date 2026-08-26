@@ -92,6 +92,8 @@ const api = {
     return data;
   },
 
+  async getPublicBoards() { return this.request('/auth/boards'); },
+
   // --- Admin Endpoints ---
   async getAdminStats() { return this.request('/admin/stats'); },
   async getAdminStudents() { return this.request('/admin/students'); },

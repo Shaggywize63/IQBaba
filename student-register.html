@@ -267,6 +267,7 @@
                         <label for="board">Education Board</label>
                         <select id="board" name="board" class="input" required>
                             <option value="">Select your board</option>
+                            <!-- Replaced at load with the boards configured in the admin panel. -->
                             <option value="CBSE">CBSE</option>
                             <option value="ICSE">ICSE</option>
                             <option value="State Board">State Board</option>
@@ -376,6 +377,9 @@
             const suggestionsContainer = document.getElementById('schoolSuggestions');
             let highlightedIndex = -1;
             let currentSuggestions = [];
+
+            // 0. Replace the built-in board list with the configured boards
+            window.populateBoardSelects();
 
             // 1. Fetch schools list
             try {

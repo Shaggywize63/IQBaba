@@ -50,6 +50,53 @@ window.serializeForm = (form) => {
     return obj;
 };
 
+
+/**
+ * Populate board dropdowns from the boards table so the admin's Board
+ * Management screen is the single source of truth. Falls back to whatever the
+ * page already has hardcoded if the request fails, so the form still works.
+ */
+window.populateBoardSelects = async (selector = 'select[name="board"]') => {
+    const selects = Array.from(document.querySelectorAll(selector));
+    if (selects.length === 0) return [];
+
+    let boards;
+    try {
+        boards = await window.api.getPublicBoards();
+    } catch (error) {
+        console.error('Could not load boards, leaving the built-in list in place:', error);
+        return [];
+    }
+    if (!Array.isArray(boards) || boards.length === 0) return [];
+
+    selects.forEach(select => {
+        const previous = select.value;
+        // Keep the page's own "Select board…" placeholder wording.
+        const placeholder = select.querySelector('option[value=""]');
+        select.innerHTML = '';
+        if (placeholder) select.appendChild(placeholder);
+
+        boards.forEach(board => {
+            const option = document.createElement('option');
+            option.value = board.name;
+            option.textContent = board.name;
+            select.appendChild(option);
+        });
+
+        // A board that was selected but has since been removed is kept as an
+        // option so editing an old record doesn't silently change its board.
+        if (previous && !boards.some(b => b.name === previous)) {
+            const stale = document.createElement('option');
+            stale.value = previous;
+            stale.textContent = previous;
+            select.appendChild(stale);
+        }
+        if (previous) select.value = previous;
+    });
+
+    return boards;
+};
+
 // Helper for logout
 window.handleLogout = () => {
     window.api.clearAuth();

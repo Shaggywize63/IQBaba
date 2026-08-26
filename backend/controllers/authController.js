@@ -194,8 +194,21 @@ const getPublicSchools = async (req, res, next) => {
   }
 };
 
+// @desc    Get the boards admins have configured, for public sign-up forms
+// @route   GET /api/auth/boards
+// @access  Public
+const getPublicBoards = async (req, res, next) => {
+  try {
+    const [boards] = await pool.query('SELECT id, name FROM boards ORDER BY name');
+    res.json(boards);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   registerStudent,
   loginUser,
-  getPublicSchools
+  getPublicSchools,
+  getPublicBoards
 };
