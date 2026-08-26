@@ -99,10 +99,8 @@
                         </div>
                         <div>
                             <label class="form-label text-xs">Class</label>
-                            <select class="form-control text-sm">
+                            <select class="form-control text-sm" id="classFilter">
                                 <option value="">All Classes</option>
-                                <option value="6">Class 6</option>
-                                <option value="10">Class 10</option>
                             </select>
                         </div>
                         <div>
@@ -166,6 +164,8 @@
             }
             loadResults();
             loadFilters();
+            window.populateClassSelects('#classFilter');
+            window.populateSubjectSelects('#subjectFilter');
         });
 
         async function loadFilters() {

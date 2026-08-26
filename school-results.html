@@ -125,12 +125,8 @@
                     <div class="filter-grid">
                         <div class="field">
                             <label>Class</label>
-                            <select class="input">
+                            <select class="input" id="classFilter">
                                 <option value="">All classes</option>
-                                <option value="6">Class 6</option>
-                                <option value="9">Class 9</option>
-                                <option value="10">Class 10</option>
-                                <option value="11">Class 11</option>
                             </select>
                         </div>
                         <div class="field">
@@ -188,6 +184,8 @@
                 return;
             }
             loadResults();
+            window.populateClassSelects('#classFilter');
+            window.populateSubjectSelects('#subjectFilter');
         });
 
         async function loadResults() {

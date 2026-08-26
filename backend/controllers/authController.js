@@ -194,7 +194,11 @@ const getPublicSchools = async (req, res, next) => {
   }
 };
 
-// @desc    Get the boards admins have configured, for public sign-up forms
+// Reference data the admin maintains. These are read-only and carry nothing
+// sensitive, so sign-up forms and the school portal can read them without a
+// token — the /api/admin/* equivalents are admin-only and would 403.
+
+// @desc    Boards configured in Board Management
 // @route   GET /api/auth/boards
 // @access  Public
 const getPublicBoards = async (req, res, next) => {
@@ -206,9 +210,35 @@ const getPublicBoards = async (req, res, next) => {
   }
 };
 
+// @desc    Classes configured in Class Management
+// @route   GET /api/auth/classes
+// @access  Public
+const getPublicClasses = async (req, res, next) => {
+  try {
+    const [classes] = await pool.query('SELECT id, name, level FROM classes ORDER BY level');
+    res.json(classes);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Subjects configured in Subject Management
+// @route   GET /api/auth/subjects
+// @access  Public
+const getPublicSubjects = async (req, res, next) => {
+  try {
+    const [subjects] = await pool.query('SELECT id, code, name FROM subjects ORDER BY name');
+    res.json(subjects);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   registerStudent,
   loginUser,
   getPublicSchools,
-  getPublicBoards
+  getPublicBoards,
+  getPublicClasses,
+  getPublicSubjects
 };
