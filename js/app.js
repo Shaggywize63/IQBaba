@@ -227,6 +227,46 @@ window.clearStaleCheckboxes = (container) => {
     container.querySelectorAll('label[data-stale]').forEach(label => label.remove());
 };
 
+/**
+ * Show the credentials a freshly created account was given.
+ *
+ * The password is generated server-side and returned once — it is stored only
+ * as a hash, so this notification is the single chance anyone has to write it
+ * down. It stays on screen until dismissed, unlike an ordinary toast.
+ */
+window.announceCredentials = (created, label = 'Student') => {
+    if (!created || !created.password) {
+        window.showNotification(`${label} created successfully!`, 'success');
+        return;
+    }
+    const container = document.getElementById('notification-container') || createNotificationContainer();
+    const card = document.createElement('div');
+    card.className = 'glass-card p-4 mb-2 animate-slide-in border-l-4 border-success';
+    card.style.cssText = 'width:320px; background:white;';
+
+    const line = (text, strong) => {
+        const p = document.createElement('div');
+        p.style.cssText = 'font-size:0.85rem; margin-bottom:0.2rem;';
+        p.textContent = text;
+        if (strong) p.style.fontWeight = '700';
+        return p;
+    };
+
+    card.appendChild(line(`${label} created. Save these now:`, true));
+    if (created.username) card.appendChild(line(`Username: ${created.username}`));
+    card.appendChild(line(`Password: ${created.password}`));
+    card.appendChild(line('Shown once — it cannot be retrieved later.'));
+
+    const close = document.createElement('button');
+    close.textContent = 'Got it';
+    close.className = 'btn btn-sm';
+    close.style.cssText = 'margin-top:0.5rem; cursor:pointer;';
+    close.addEventListener('click', () => card.remove());
+    card.appendChild(close);
+
+    container.appendChild(card);
+};
+
 // Helper for logout
 window.handleLogout = () => {
     window.api.clearAuth();

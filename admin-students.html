@@ -223,9 +223,9 @@
                     </div>
                 </div>
                 <div class="form-group mt-2">
-                    <label class="form-label" id="studentPasswordLabel">Password *</label>
-                    <input type="text" name="password" class="form-control" id="studentPasswordInput" value="password123" required>
-                    <small class="text-grey" id="studentPasswordHint">Default is password123</small>
+                    <label class="form-label" id="studentPasswordLabel">Password</label>
+                    <input type="text" name="password" class="form-control" id="studentPasswordInput" placeholder="Leave blank to generate one" >
+                    <small class="text-grey" id="studentPasswordHint">Leave blank and a unique password is generated, shown once after saving</small>
                 </div>
                 <div class="flex justify-end gap-2 mt-4">
                     <button type="button" class="btn btn-outline" onclick="closeModal('addStudentModal')">Cancel</button>
@@ -248,7 +248,7 @@
                 Fill one row per student in Excel or Google Sheets, then save as CSV.
                 <strong>Full Name</strong>, <strong>Username</strong>, <strong>Class</strong>, <strong>Board</strong> and <strong>School</strong> are required.
                 The School column accepts a school name, its code, or its id — an unrecognised name is stored as an unregistered school.
-                Leave Password blank to use <strong>password123</strong>.
+                Leave Password blank and each row gets its own generated password, downloadable after the import.
             </p>
             <button type="button" class="btn btn-outline btn-block mb-4" id="studentTemplateBtn">Download CSV Template</button>
 
@@ -504,11 +504,12 @@
 
             document.getElementById('studentModalTitle').textContent = 'Add New Student';
             document.getElementById('studentSubmitBtn').textContent = 'Save Student';
-            document.getElementById('studentPasswordLabel').textContent = 'Password *';
-            document.getElementById('studentPasswordHint').textContent = 'Default is password123';
+            document.getElementById('studentPasswordLabel').textContent = 'Password';
+            document.getElementById('studentPasswordHint').textContent = 'Leave blank and a unique password is generated, shown once after saving';
             const passwordInput = document.getElementById('studentPasswordInput');
-            passwordInput.value = 'password123';
-            passwordInput.required = true;
+            passwordInput.value = '';
+            // Blank is valid now - it means "generate one".
+            passwordInput.required = false;
             openModal('addStudentModal');
         }
 
@@ -559,8 +560,8 @@
                     await window.api.updateAdminStudent(editingStudentId, formData);
                     window.showNotification('Student updated successfully!', 'success');
                 } else {
-                    await window.api.addAdminStudent(formData);
-                    window.showNotification('Student created successfully!', 'success');
+                    const created = await window.api.addAdminStudent(formData);
+                    announceCredentials(created);
                 }
 
                 closeModal('addStudentModal');
