@@ -32,7 +32,8 @@ hPanel → Advanced → **Node.js** → Create application:
 | Node version | 18 or newer (Express 5 needs it) |
 | Application root | the directory Git deploys into, e.g. `domains/iqbaba.in/public_html` |
 | Application URL | `iqbaba.in` |
-| Application startup file | `backend/server.js` |
+| Application startup file / **Entry file** | `backend/server.js` (or leave the `app.js` default — the repository has one that loads it) |
+| **Start command** | `npm start` |
 
 Pointing the application URL at the domain root lets Express serve both the
 pages and the API from one address. `js/config.js` then stays empty, because
